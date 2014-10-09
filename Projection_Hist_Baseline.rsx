@@ -9,6 +9,7 @@
 ##lutm_o=output table
 ##tpm_matrix=output table
 
+#example to undo a commit
 
 library(foreign)
 library(reshape2)
