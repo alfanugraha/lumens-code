@@ -1,0 +1,50 @@
+NAME:Generate Basin
+GROUP:[QUES]
+PARAMETER:ParameterRaster|RASTERLAYER_DEM|DEM|False
+120.0,60.0
+PARAMETER:ParameterNumber|NUMBER_STREAMTRESHOLD|Stream treshold|0.0|1000000.0|10000.0
+821.0,54.0
+PARAMETER:ParameterVector|VECTORLAYER_OUTLET|Outlet|0|False
+402.0,127.0
+VALUE:HARDCODEDPARAMVALUE_-sw_4===False
+VALUE:HARDCODEDPARAMVALUE_-nc_2===True
+ALGORITHM:taudem:pitremove
+424.0,190.0
+None
+-1|RASTERLAYER_DEM
+D8 Pit Removed Elevation Grid |175.0,414.0
+ALGORITHM:taudem:d8flowdirections
+163.0,330.0
+None
+0|-fel
+D8 Flow Direction|163.0,705.0
+D8 Slope Grid|398.0,637.0
+ALGORITHM:taudem:d8contributingarea
+396.0,469.0
+None
+1|-p
+-1|VECTORLAYER_OUTLET
+None
+-1|HARDCODEDPARAMVALUE_-nc_2
+D8 Contributing Area Grid|755.0,673.0
+ALGORITHM:taudem:streamdefinitionbythreshold
+1115.0,134.0
+None
+2|-ad8
+-1|NUMBER_STREAMTRESHOLD
+None
+Stream Raster Grid|1359.0,170.0
+ALGORITHM:taudem:streamreachandwatershed
+1268.0,317.0
+None
+0|-fel
+1|-p
+2|-ad8
+3|-src
+None
+-1|HARDCODEDPARAMVALUE_-sw_4
+Stream Order Grid|1499.0,486.0
+Watershed Grid|1243.0,431.0
+Stream Reach|1390.0,518.0
+Network Connectivity Tree|1489.0,380.0
+Network Coordinates|1298.0,596.0
