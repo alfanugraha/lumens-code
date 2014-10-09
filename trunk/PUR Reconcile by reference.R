@@ -46,9 +46,10 @@ LUT_ref<- datalist_ref[4]
 ref_data<-as.character(file_ref[1,])
 
 st_area_file<- substr(basename(ref_data), 1, nchar(basename(ref_data)) - 4)
-st_area_file
+
 #sa<-readOGR('.',st_area_file)
-sa<-readOGR(dsn=wd,st_area_file)
+wd_ref<-dirname(as.character(ref_data))
+sa<-readOGR(dsn=wd_ref,st_area_file)
 
 xlim_sa <- sa@bbox[1, ]
 ylim_sa <- sa@bbox[2, ]
@@ -75,8 +76,9 @@ command3<-paste()
 for (i in 1:file.number) {
   test<-basename (as.character(file[i,]))
   input <-substr(basename(test), 1, nchar(basename(test)) - 4)
+  wd_loop<-dirname(as.character(file[i,]))
   #eval(parse(text=(paste("pu_v",i,'<-readOGR(".","', input,'")', sep="")))) ;default dari mas andree
-  eval(parse(text=(paste("pu_v",i,'<-readOGR("', wd,'","', input,'")', sep=""))))
+  eval(parse(text=(paste("pu_v",i,'<-readOGR("', wd_loop,'","', input,'")', sep=""))))
   eval(parse(text=(paste("pu",i,'<-','rasterize(pu_v',i,',r)',sep=""))))
   eval(parse(text=(paste("pu", i, "<-deratify(pu", i, ",'", as.character(attribute[i,]), "')", sep=""))))
   #eval(parse(text=(paste("PUR<-stack(PUR,","pu",i,")", sep=""))))
