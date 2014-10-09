@@ -1,0 +1,49 @@
+(dp0
+VFILE_LANDUSEMAP
+p1
+VQUES-B melakukan analisa berdasarkan peta penutupan lahan pada periode yang ingin diukur. Masukan datanya adalah peta tutupan lahan dalam format RASTER. Format data yang bisa digunakan adalah: GeoTiff (.tif), IMAGINE (.img), IDRISI Raster (.rst), GRID (.grd) dan ASCII raster (.asc) 
+p2
+sS'ALG_DESC'
+p3
+VQUES-B merupakan modul LUMENS (Land Use Planning for Multiple Environmental Services) yang berfungsi untuk memprediksi perubahan keanekaragaman hayati (biodiversitas) akibat dari aktivitas alih fungsi lahan. Perubahan keanekaragaman tersebut dikuantifikasi dengan memperhatikan komposisi dan konfigurasi dari habitat.\u000a\u000antuk menjalankan modul ini pastikan Fragstats v 4.2 sudah terinstall di komputer anda.\u000aFragstats 4.2 dapat diunduh di: http://www.umass.edu/landeco/research/fragstats/downloads/fragstats_downloads.html
+p4
+sVNUMBER_PERIOD
+p5
+VWaktu pengambilan data peta tutupan lahan
+p6
+sVNUMBER_GRIDSIZE
+p7
+VJarak antar titik pengambilan sample nilai kontras tepi total pada skala lanskap.
+p8
+sS'ALG_CREATOR'
+p9
+V
+p10
+sVFILE_EDGECONTRASTTABLE
+p11
+VTabel tingkatan ketidaksamaan pada tiap jenis penutupan lahan. Format data yang bisa digunakan adalah .fsq
+p12
+sVFILE_BIODIVERSITYHOTSPOTSLOOKUPTABLE
+p13
+VTabel kelas penutupan lahan yang digolongkan sebagai habitat. Format data yang bisa digunakan adalah CSV (.csv), TEXT file (.txt) 
+p14
+sVSTRING_LOCATION
+p15
+VLokasi analisis QUES-B
+p16
+sS'ALG_HELP_CREATOR'
+p17
+g10
+sVFILE_WORKINGDIRECTORY
+p18
+VLokasi penyimpanan data hasil analisa QUES-B
+p19
+sVFILE_MODELFILE
+p20
+VFile berisi parameter-parameter untuk menjalankan kalkulasi dalam Fragstats.\u000aFormat data yang bisa digunakan adalah .fca
+p21
+sVFILE_CLASSDESCRIPTORS
+p22
+VTabel deskripsi kelas masing-masing tipe penggunaan lahan. Format data yang digunakan adalah teks comma delimited yang disimpan dalam format .fcd 
+p23
+s.
