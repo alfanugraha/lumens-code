@@ -1,5 +1,3 @@
-#this is for example to see the diff 
-
 ##[QUES]=group
 ##working_directory=folder
 ##landuse1=raster
