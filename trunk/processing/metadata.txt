@@ -1,0 +1,16 @@
+[general]
+name=LUMENS
+description=Land Use Planning for Environmental Services for QGIS
+category=Analysis
+
+version=0.1
+qgisMinimumVersion=2.0
+
+author=Alfa Nugraha
+email=A.Nugraha@cgiar.org
+website=www.qgis.org
+
+icon=images/lumens.png
+
+experimental=True
+deprecated=False	
