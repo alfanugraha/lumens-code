@@ -16,7 +16,6 @@
 ##fs_table=output table
 ##data_merge=output table
 ##passfilenames
-#report
 
 
 library(R2HTML)
@@ -42,15 +41,15 @@ library(rtf)
 
 ##[QUES]=group
 working_directory="C:/LUMENS_kal/QUES_C_test"
-landuse1="C:/LUMENS_kal/2_Raster/02_Berau/berau_lc00_L3_utm50n.tif"
-landuse2="C:/LUMENS_kal/2_Raster/02_Berau/berau_lc05_L3_utm50n.tif"
-zone="C:/LUMENS_kal/4_Raster_zone/Zona_sk942_Berau.tif"
+landuse1="C:/LUMENS_kal/BERAU_QUES_C_L4/kec_berau_lc00_l4ndat.tif"
+landuse2="C:/LUMENS_kal/BERAU_QUES_C_L4/kec_berau_lc05_l4_ndat.tif"
+zone="C:/LUMENS_kal/BERAU_QUES_C_L4/zone_kec_berau_ndat.tif"
 periode1= 2000
 periode2= 2005
 location="Berau"
 carbon_lookup="C:/LUMENS_kal/3_Table/2_Berau/Tabel_cadangan_karbon.csv"
 zone_lookup="C:/LUMENS_kal/3_Table/2_Berau/Tabel_zonasi.csv"
-nodata=65535
+nodata=27
 
 time_start<-paste(eval(parse(text=(paste("Sys.time ()")))), sep="")
 
@@ -151,6 +150,19 @@ data_merge <- as.data.frame(merge(data_merge,lookup_c,by="ID_LC2"))
 colnames(lookup_z)[1]="ZONE"
 colnames(lookup_z)[2]="Z_NAME"
 data_merge <- as.data.frame(merge(data_merge,lookup_z,by="ZONE"))
+#modify carbon stock density ecah time series
+data_merge$CARBON_t1<-data_merge$CARBON_t1*Spat_res
+data_merge$CARBON_t2<-data_merge$CARBON_t2*Spat_res
+
+data_merge$ck_em<-data_merge$CARBON_t1>data_merge$CARBON_t2
+data_merge$ck_sq<-data_merge$CARBON_t1<data_merge$CARBON_t2
+data_merge$em<-(data_merge$CARBON_t1-data_merge$CARBON_t2)*data_merge$ck_em*data_merge$COUNT*3.67
+data_merge$sq<-(data_merge$CARBON_t2-data_merge$CARBON_t1)*data_merge$ck_sq*data_merge$COUNT*3.67
+data_merge$LU_CHG <- do.call(paste, c(data_merge[c("LC_t1", "LC_t2")], sep = " to "))
+data_merge$null<-0
+data_merge$nullCek<-data_merge$em+data_merge$sq
+
+
 
 #generate area_zone lookup and calculate min area
 area_zone<-levels(ratify(zone, count=T))
@@ -159,8 +171,8 @@ area_zone<-merge(area_zone, lookup_z, by="ID")
 area<-min(sum(area_zone$COUNT), sum(data_merge$COUNT))
 
 #calculate emission for each planning unit
-zone_emission <- as.data.frame(zonal(emission,zone,'sum'))
-zone_sequestration <- as.data.frame(zonal(sequestration,zone,'sum'))
+zone_emission <- as.data.frame(zonal((Spat_res*emission),zone,'sum')) #adjust emission by actual raster area
+zone_sequestration <- as.data.frame(zonal((Spat_res*sequestration),zone,'sum'))#adjust sequestration by actual raster area
 colnames(zone_emission)[1] = "ID"
 colnames(zone_emission)[2] = "Em_tot"
 colnames(zone_sequestration)[1] = "ID"
@@ -185,30 +197,7 @@ fs_table<-data.frame(fs_id,fs_cat,fs_summary)
 colnames(fs_table)<-c("ID", "Category", "Summary")
 
 #create QUES-C database
-stack_data <- stack(landuse1,landuse2,zone,carbon1,carbon2,emission,sequestration)
-cross <- as.data.frame(crosstab((stack(landuse1,landuse2,zone))))
-colnames(cross)[1] ="ID_LC1"
-colnames(cross)[2] = "ID_LC2"
-colnames(cross)[3] = "ZONE"
-colnames(cross)[4] = "COUNT"
-colnames(lookup_c)[1]="ID_LC1"
-colnames(lookup_c)[2]="LC_t1"
-colnames(lookup_c)[3]="CARBON_t1"
-data_merge <- merge(cross,lookup_c,by="ID_LC1")
-colnames(lookup_c)[1]="ID_LC2"
-colnames(lookup_c)[2]="LC_t2"
-colnames(lookup_c)[3]="CARBON_t2"
-data_merge <- as.data.frame(merge(data_merge,lookup_c,by="ID_LC2"))
-colnames(lookup_z)[1]="ZONE"
-colnames(lookup_z)[2]="Z_NAME"
-data_merge <- as.data.frame(merge(data_merge,lookup_z,by="ZONE"))
-data_merge$ck_em<-data_merge$CARBON_t1>data_merge$CARBON_t2
-data_merge$ck_sq<-data_merge$CARBON_t1<data_merge$CARBON_t2
-data_merge$em<-(data_merge$CARBON_t1-data_merge$CARBON_t2)*data_merge$ck_em*data_merge$COUNT*3.67
-data_merge$sq<-(data_merge$CARBON_t2-data_merge$CARBON_t1)*data_merge$ck_sq*data_merge$COUNT*3.67
-data_merge$LU_CHG <- do.call(paste, c(data_merge[c("LC_t1", "LC_t2")], sep = " to "))
-data_merge$null<-0
-data_merge$nullCek<-data_merge$em+data_merge$sq
+
 
 #make zonal statistics database
 lg<-length(unique(data_merge$ZONE))
