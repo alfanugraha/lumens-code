@@ -1,3 +1,4 @@
+#Polygonize function
 osego_bat<-readLines("C:/OSGeo4W/OSGeo4W.bat")
 rast_dir<-paste('"C:\\Users\\dindiarto\\AppData\\Local\\Temp\\Rtmp0Mh3pM\\file203c68ad1190.asc"')
 data_format<-paste('"ESRI Shapefile"')
@@ -11,4 +12,16 @@ close(fileConn)
 setwd(wd1)
 system2("OSGeo4W.bat")
   
+
+#rasterize function
+shp_dir<-paste('"C:/LUMENS_kal/1_PUR/1_Prop_Kaltim/kaltim_penunjukankws_nop2012_utm50n.shp"')
+file_out<-paste("C:/LUMENS_kal/2_Raster/01_Kaltim/kaltim_penunjukan_kawasan.tif")
+kolom_data<-paste('ID')
+opsi<-1
+res<-100
+osgeo_comm<-paste("gdal_rasterize.exe", shp_dir, file_out,"-a",kolom_data, "-tr", res, res, "-a_nodata 65535", sep=" ")
+osgeo_comm
+wd<-"C:\\OSGeo4W\\bin"
+setwd(wd)
+system2(osgeo_comm)
 
