@@ -14,14 +14,15 @@ system2("OSGeo4W.bat")
   
 
 #rasterize function
-shp_dir<-paste('"C:/LUMENS_kal/1_PUR/1_Prop_Kaltim/kaltim_penunjukankws_nop2012_utm50n.shp"')
-file_out<-paste("C:/LUMENS_kal/2_Raster/01_Kaltim/kaltim_penunjukan_kawasan.tif")
+shp_dir<-shQuote("C:/LUMENS_kal/1_PUR/1_Prop_Kaltim/kaltim_penunjukankws_nop2012_utm50n.shp")
+file_out<-shQuote("C:/LUMENS_kal/2_Raster/01_Kaltim/kaltim_penunjukan_kawasan.tif")
 kolom_data<-paste('ID')
 opsi<-1
 res<-100
-osgeo_comm<-paste("gdal_rasterize.exe", shp_dir, file_out,"-a",kolom_data, "-tr", res, res, "-a_nodata 65535", sep=" ")
-osgeo_comm
+osgeo_comm<-paste("C:\\OSGeo4W\\bin\\gdal_rasterize.exe",shp_dir, file_out,"-a",kolom_data, "-tr", res, res, "-a_nodata 65535", sep=" ")
 wd<-"C:\\OSGeo4W\\bin"
+shell(osgeo_comm)
+
 setwd(wd)
 system2(osgeo_comm)
 
