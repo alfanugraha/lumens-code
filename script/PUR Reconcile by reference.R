@@ -115,7 +115,6 @@ eval(parse(text=(paste( "PUR_db<-transform(PUR_db, unique_id=as.integer(interact
 #PUR_db<-transform(PUR_db, unique_id=as.integer(interaction(Var1, Var2, Var3, Var4, Var5, drop=TRUE)))
 #PUR_db<-transform(PUR_db, unique_id=as.integer(interaction(Var1, Var2, Var3, Var4, drop=TRUE)))
 PUR_db<-PUR_db[ which(PUR_db$Freq > 0),] ;# filter 0 value
-plot(PUR)
 
 # PREPARE ATTRIBUTE DATA TO BE MERGE
 central_attr<-ref_attribute
@@ -268,7 +267,6 @@ PUR_rec1 <- deratify(PUR,'Rec_phase1')
 PUR_rec2<-ratify(PUR_rec1, filename='PUR_rec1.grd',count=TRUE,overwrite=TRUE)
 levels(PUR_rec1)<-merge((levels(PUR_rec1)),levels(PUR_rec2),by="ID")
 PUR_rec3<-stack(PUR, PUR_rec1)
-plot(PUR_rec3)
 
 #FILTER OUTPUT TABLE
 PUR_dbfinal_out<-PUR_dbfinal
@@ -440,114 +438,89 @@ myColors4 <- brewer.pal(9, "Pastel1")
 myColors5 <- brewer.pal(8, "Set2")
 myColors6 <- brewer.pal(8, "Dark2")
 myColors7 <- brewer.pal(11, "Spectral")
-myColors  <-c(myColors7,myColors1, myColors2, myColors3, myColors4, myColors5, myColors6)
+myColors  <-c(myColors1,myColors7, myColors2, myColors3, myColors4, myColors5, myColors6)
+rm(myColors1,myColors7, myColors2, myColors3, myColors4, myColors5, myColors6)
 
 #Planning Unit Map
-PUM<-rasterToPoints(PUR_stack); 
-PUM<-as.data.frame(PUM)
 PUM.lab<-as.data.frame(levels(PUR_stack))
-
 y<-ncol(PUM.lab)
 y<-y/2
 for(i in 1:y){
-  assign(paste("data",i,sep="."),cbind(PUM[,1:2],PUM[,2+i]))
-  assign(paste("data.lab",i,sep="."),PUM.lab[,(i*2-1):(i*2)])
-  eval(parse(text=(paste("colnames(data.",i,")<-c('X','Y','ID')",sep=""))))
-  eval(parse(text=(paste("colnames(data.lab.",i,")[1]<-'ID'",sep=""))))
-  eval(parse(text=(paste("data.",i,"<-merge(data.",i,",data.lab.",i,",by='ID',all='TRUE')",sep=""))))
-  eval(parse(text=(paste("data.",i,"$ID<-NULL",sep=""))))
-  eval(parse(text=(paste("myColors.data.",i,"<-myColors[1:length(unique(data.",i,"[,3]))]",sep=""))))
-  eval(parse(text=(paste("names(myColors.data.",i,")<-unique(data.",i,"[,3])",sep=""))))
-  eval(parse(text=(paste("ColScale.data.",i,"<-scale_fill_manual(name='Planning Unit',values=myColors.data.",i,")",sep=""))))
-  eval(parse(text=(paste("Plot.data.",i,"<-ggplot(data=data.",i,")+geom_raster(aes(x=data.",i,"$X, y=data.",i,"$Y, fill=data.",i,"[,3]))+",
-                         "ColScale.data.",i,"+","ggtitle(paste(colnames(data.",i,"[3])))+",
-                         "theme(plot.title=element_text(lineheight=5, face='bold'))+",
-                         "theme(axis.title.x=element_blank(), axis.title.y=element_blank(),
-                         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
-                         legend.title=element_text(size=8),
-                         legend.text=element_text(size=6),
-                         legend.key.height = unit(0.25, 'cm'),
-                         legend.key.width = unit(0.25, 'cm'))", sep=""))))
+  eval(parse(text=paste("data.",i,"<-PUR_stack[[",i,"]]",sep="")))
+  eval(parse(text=paste("data.",i,"[data.",i,"[]==0]<-NA",sep="")))
+  eval(parse(text=paste("myColors.data.",i,"<-myColors[1:length(unique(PUM.lab[,",i*2,"]))]",sep="")))
+  eval(parse(text=paste("ColScale.data.",i,"<-scale_fill_manual(name='Planning Unit',breaks=unique(PUM.lab[,",i*2-1,"]), labels=unique(PUM.lab[,",i*2,"]), values=myColors.data.",i,")",sep="")))
+  eval(parse(text=paste("Plot.data.",i,"<-gplot(x=data.",i,",maxpixel=100000)+geom_raster(aes(fill=as.factor(value)))+",
+                        "ColScale.data.",i,"+","ggtitle(paste(colnames(PUM.lab[",i*2,"])))+","coord_equal()+",
+                        "theme(plot.title=element_text(lineheight=5, face='bold'))+",
+                        "theme(axis.title.x=element_blank(), axis.title.y=element_blank(),
+                        panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+                        legend.title=element_text(size=8),
+                        legend.text=element_text(size=6),
+                        legend.key.height = unit(0.25, 'cm'),
+                        legend.key.width = unit(0.25, 'cm'))", sep="")))
 }
+rm(PUM.lab)
 
 #Plot 3 (Peta ijin diatas peta referensi)
-if (exists("PUR_over_ref")) {
-  PUR.O.R<-rasterToPoints(PUR_over_ref); 
-  PUR.O.R<-as.data.frame(PUR.O.R)
-  colnames(PUR.O.R) <- c("X","Y","ID")
-  PUR.O.R.lab<-as.data.frame(levels(PUR_over_ref))
-  PUR.O.R.lab$COUNT<-NULL
-  PUR.O.R<-merge(PUR.O.R, PUR.O.R.lab, by="ID")
-  PUR.O.R$ID<-as.factor(PUR.O.R$ID)
-  myColors.PUR.O.R <- myColors[1:length(unique(PUR.O.R$ID))]
-  names(myColors.PUR.O.R) <- unique(PUR.O.R$Rec_phase1)
-  ColScale.PUR.O.R<-scale_fill_manual(name="Planning Unit", values = myColors.PUR.O.R )
-  plot.PUR.O.R  <- ggplot(data=PUR.O.R) + geom_raster(aes(x=PUR.O.R$X, y=PUR.O.R$Y, fill=PUR.O.R$Rec_phase1)) +
-    ColScale.PUR.O.R +  ggtitle(paste("Permit Over Reference Map")) +
-    theme(plot.title = element_text(lineheight= 5, face="bold")) +
-    theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
-           panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
-           legend.title = element_text(size=8),
-           legend.text = element_text(size = 6),
-           legend.key.height = unit(0.25, "cm"),
-           legend.key.width = unit(0.25, "cm"))
-} else {
-  plot.PUR.O.R<-"no permit map found"
-  
-}
-
+PUR.O.R.lab<-as.data.frame(levels(PUR_over_ref))
+PUR.O.R.lab$COUNT<-NULL
+myColors.PUR.O.R <- myColors[1:length(unique(PUR.O.R.lab$ID))]
+ColScale.PUR.O.R<-scale_fill_manual(name="Planning Unit",breaks=PUR.O.R.lab$ID, labels=PUR.O.R.lab$Rec_phase1, values = myColors.PUR.O.R )
+plot.PUR.O.R  <- gplot(PUR_over_ref2) + geom_raster(aes(fill=as.factor(value))) +
+  ColScale.PUR.O.R +  coord_equal() + ggtitle(paste("Permit Over Reference Map")) +
+  theme(plot.title = element_text(lineheight= 5, face="bold")) +
+  theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
+         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+         legend.title = element_text(size=8),
+         legend.text = element_text(size = 6),
+         legend.key.height = unit(0.25, "cm"),
+         legend.key.width = unit(0.25, "cm"))
 
 #Plot 4 (Peta permit yang sesuai)
-if (exists("PUR_resolved")) {
-  PUR.R<-rasterToPoints(PUR_resolved); 
-  PUR.R<-as.data.frame(PUR.R)
-  colnames(PUR.R) <- c("X","Y","ID")
-  PUR.R.lab<-as.data.frame(levels(PUR_resolved))
-  PUR.R.lab$COUNT<-NULL
-  PUR.R<-merge(PUR.R, PUR.R.lab, by="ID")
-  PUR.R$ID<-as.factor(PUR.R$ID)
-  myColors.PUR.R <- myColors[1:length(unique(PUR.R$ID))]
-  names(myColors.PUR.R) <- unique(PUR.R$Rec_phase1)
-  ColScale.PUR.R<-scale_fill_manual(name="Planning Unit", values = myColors.PUR.R )
-  plot.PUR.R  <- ggplot(data=PUR.R) + geom_raster(aes(x=PUR.R$X, y=PUR.R$Y, fill=PUR.R$Rec_phase1)) +
-    ColScale.PUR.R +  ggtitle(paste("Resolved Permit Map")) +
-    theme(plot.title = element_text(lineheight= 5, face="bold")) +
-    theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
-           panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
-           legend.title = element_text(size=8),
-           legend.text = element_text(size = 6),
-           legend.key.height = unit(0.25, "cm"),
-           legend.key.width = unit(0.25, "cm"))
-} else {
-  plot.PUR.R<-("no resolved area found!")
-}
-
+PUR.R.lab<-as.data.frame(levels(PUR_resolved))
+PUR.R.lab$COUNT<-NULL
+myColors.PUR.R <- myColors[1:length(unique(PUR.R.lab$ID))]
+ColScale.PUR.R<-scale_fill_manual(name="Planning Unit", breaks=PUR.R.lab$ID, labels=PUR.R.lab$Rec_phase1, values = myColors.PUR.R )
+plot.PUR.R  <- gplot(PUR_resolved2, maxpixels=100000) + geom_raster(aes(fill=as.factor(value))) +
+  ColScale.PUR.R + coord_equal() + ggtitle(paste("Resolved Permit Map")) +
+  theme(plot.title = element_text(lineheight= 5, face="bold")) +
+  theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
+         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+         legend.title = element_text(size=8),
+         legend.text = element_text(size = 6),
+         legend.key.height = unit(0.25, "cm"),
+         legend.key.width = unit(0.25, "cm"))
 
 #Plot 5 (Peta permit yang belum terselesaikan)
-if (exists("PUR_unresolved")) {
-  PUR.U<-rasterToPoints(PUR_unresolved); 
-  PUR.U<-as.data.frame(PUR.U)
-  colnames(PUR.U) <- c("X","Y","ID")
-  PUR.U.lab<-as.data.frame(levels(PUR_unresolved))
-  PUR.U.lab$COUNT<-NULL
-  PUR.U<-merge(PUR.U, PUR.U.lab, by="ID")
-  PUR.U$ID<-as.factor(PUR.U$ID)
-  myColors.PUR.U <- myColors[1:length(unique(PUR.U$ID))]
-  names(myColors.PUR.U) <- unique(PUR.U$Rec_phase1)
-  ColScale.PUR.U<-scale_fill_manual(name="Planning Unit", values = myColors.PUR.U )
-  plot.PUR.U  <- ggplot(data=PUR.U) + geom_raster(aes(x=PUR.U$X, y=PUR.U$Y, fill=PUR.U$Rec_phase1)) +
-    ColScale.PUR.U +  ggtitle(paste("Unresolved Permit Map")) +
-    theme(plot.title = element_text(lineheight= 5, face="bold")) +
-    theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
-           panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
-           legend.title = element_text(size=8),
-           legend.text = element_text(size = 6),
-           legend.key.height = unit(0.25, "cm"),
-           legend.key.width = unit(0.25, "cm"))
-} else {
-  plot.PUR.U<-("no unresolved area found!")
-}
+PUR.U.lab<-as.data.frame(levels(PUR_unresolved))
+PUR.U.lab$COUNT<-NULL
+myColors.PUR.U <- myColors[1:length(unique(PUR.U.lab$ID))]
+ColScale.PUR.U<-scale_fill_manual(name="Planning Unit",breaks=PUR.U.lab$ID, labels=PUR.U.lab$Rec_phase1, values = myColors.PUR.U )
+plot.PUR.U  <- gplot(PUR_unresolved2, maxpixels=100000) + geom_raster(aes(fill=as.factor(value))) +
+  ColScale.PUR.U + coord_equal() + ggtitle(paste("Unresolved Permit Map")) +
+  theme(plot.title = element_text(lineheight= 5, face="bold")) +
+  theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
+         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+         legend.title = element_text(size=8),
+         legend.text = element_text(size = 6),
+         legend.key.height = unit(0.25, "cm"),
+         legend.key.width = unit(0.25, "cm"))
 
+#Plot 6 (Peta hasil rekonsiliasi)
+PUR.Rec.lab<-area_rec1
+PUR.Rec.lab$COUNT<-NULL
+myColors.PUR.Rec <- myColors[1:length(unique(PUR.Rec.lab$ID))]
+ColScale.PUR.Rec<-scale_fill_manual(name="Planning Unit",breaks=PUR.Rec.lab$ID, labels=PUR.Rec.lab$Rec_phase1, values = myColors.PUR.Rec )
+plot.PUR.Rec  <- gplot(PUR_rec2, maxpixels=100000) + geom_raster(aes(fill=as.factor(value))) +
+  ColScale.PUR.Rec + coord_equal() + ggtitle(paste("Reconciliation Map")) +
+  theme(plot.title = element_text(lineheight= 5, face="bold")) +
+  theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
+         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+         legend.title = element_text(size=8),
+         legend.text = element_text(size = 6),
+         legend.key.height = unit(0.25, "cm"),
+         legend.key.width = unit(0.25, "cm"))
 
 #barplot(reconciliation phase 1 summary)
 #Largest Net Emission rate
@@ -649,6 +622,7 @@ addTable(rtffile, area_rec1)
 addNewLine(rtffile)
 addPlot.RTF(rtffile, plot.fun=plot, width=6.7, height=3, res=150, Rec.phs.bar )
 addNewLine(rtffile)
-
+addPlot.RTF(rtffile, plot.fun=plot, width=6.7, height=3, res=150, plot.PUR.Rec )
+addNewLine(rtffile)
 
 done(rtffile)
