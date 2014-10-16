@@ -22,7 +22,3 @@ res<-100
 osgeo_comm<-paste("C:\\OSGeo4W\\bin\\gdal_rasterize.exe",shp_dir, file_out,"-a",kolom_data, "-tr", res, res, "-a_nodata 65535", sep=" ")
 wd<-"C:\\OSGeo4W\\bin"
 shell(osgeo_comm)
-
-setwd(wd)
-system2(osgeo_comm)
-
