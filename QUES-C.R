@@ -57,7 +57,7 @@ time_start<-paste(eval(parse(text=(paste("Sys.time ()")))), sep="")
 setwd(working_directory)
 
 # load datasets
-landuse1 <- raster(landuse1)
+landuse1 <- raster(landuse1) #test comment
 landuse2 <- raster(landuse2)
 zone <- raster(zone)
 
