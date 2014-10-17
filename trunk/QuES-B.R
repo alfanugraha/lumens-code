@@ -51,7 +51,7 @@ year<-2000
 lu1<-raster("C:/QUES_B_DJB/Data_QUESB/Merangin/raster/lc_2000_Mrg1.tif")
 
 lu1_path<-paste("C:/QUES_B_DJB/Data_QUESB/Merangin/raster/lc_2000_Mrg1.tif")
-gridres<-(10000)
+gridres<-10000
 windowsize<-1000
 raster.nodata<-255
 
@@ -90,8 +90,8 @@ newproj<-proj4string(lu1)
 r<-raster(xmn=xl1, xmx=xu1, ymn=yl1, ymx=yu1, ncol=ncellx, nrow=ncelly, crs=newproj)
 res(r)<-gridres
 vals <- 1:ncell(r)
-sampling.rast<-setValues(r,vals)
-sampling.rast<-resample(sampling.rast,lu1, method="ngb"); #sampling grid raster file
+r<-setValues(r,vals)
+sampling.rast<-resample(r,lu1, method="ngb"); #sampling grid raster file
 
 
 #Calculate total Area
@@ -190,7 +190,7 @@ SQLite(max.con = 200, fetch.default.rec = 500, force.reload = FALSE, shared.cach
 drv <- dbDriver("SQLite")
 con <- dbConnect(drv, dbname=as.character(fca))
 
-fa#delete all record from frg_landscape layer
+#delete all record from frg_landscape layer
 del<-paste("DELETE FROM frg_landscape_layers")
 ll <- dbSendQuery(con, del)
 
@@ -213,7 +213,7 @@ if (file.exists("C:/Program Files (x86)/Fragstats 4")){
 
 #execute fragstats
 sysout<-paste(outpath, "fragout", sep="")
-f <- paste('frg -m',dQuote(fca),' -o',sysout)
+f <- paste('frg -m',shQuote(fca),' -o',sysout)
 system(f)
 
 
@@ -265,7 +265,7 @@ AUC2<-round(AUC,digits=2)
 sumtab2<-round(sumtab1,digits=2)
 colnames(sumtab2)<-c("ID","ID.centro","X.cor","Y.cor","Habitat Area (Ha)","TECI(%)", "Cumulative Habitat(%)")
 write.table(sumtab2, "QUES-B Summary calculation.csv", row.names = FALSE, sep=",")
-file.newwdout<-substr(basename(newwdout), 1, nchar(basename(newwdout)) - 4
+file.newwdout<-paste(substr(basename(newwdout), 1, nchar(basename(newwdout)) - 4),'_NA', sep='')
 writeRaster(mwfile, filename=file.newwdout, format="GTiff", overwrite=TRUE)
 
 #delete all record from frg_landscape layer
@@ -274,15 +274,6 @@ ll <- dbSendQuery(con, del)
 dbGetStatement(ll)
 dbHasCompleted(ll)
 
-
-#CHANGE LU STYLE
-#display.brewer.all()
-lu<-lu1
-lu<-ratify(lu)
-rat<- levels(lu)[[1]]
-z<-as.data.frame(c(lookup_bh[2], lookup_bh[1]))
-rat$landcover<-merge((levels(lu)),z,by="ID")
-levels(lu)<- rat$landcover
 
 
 #CREATE INTERACTIVE PLOT
