@@ -31,6 +31,7 @@ library(pracma)
 library(knitr)
 library(markdown)
 library(SVGAnnotation)
+library(spatial.tools)
 
 #set working directory
 #setwd(Wdir)
@@ -49,7 +50,6 @@ library(SVGAnnotation)
 setwd("C:/QUES_B_DJB/Merangin_2000")
 year<-2000
 lu1<-raster("C:/QUES_B_DJB/Data_QUESB/Merangin/raster/lc_2000_Mrg1.tif")
-
 lu1_path<-paste("C:/QUES_B_DJB/Data_QUESB/Merangin/raster/lc_2000_Mrg1.tif")
 gridres<-10000
 windowsize<-1000
@@ -64,6 +64,9 @@ blook<-paste("C:/QUES_B_DJB/Data_QUESB/Merangin/habitat_merangin.csv")
 
 location<-('Merangin')
 period<-(year)
+
+zone<-"C:/QUES_B_DJB/Data_QUESB/Merangin/raster/Zona_Merangin.tif"
+zone_lookup<-"C:/QUES_B_DJB/Data_QUESB/Merangin/Tabel_zona_Merangin.csv"
 
 #projection handling
 if (grepl("+units=m", as.character(lu1@crs))){
@@ -255,7 +258,7 @@ cumax<-max(sumtab1$Cum.Sum, na.rm=TRUE)
 #sumtab[nrow(sumtab)+1, ] <- c(100,100,100,cumax)
 #sumtab1<-sumtab
 sumtab1[nrow(sumtab1)+1, ] <- c(sumtab1$ID.grid[nrow(sumtab1)],100,sumtab1$ID.centro[nrow(sumtab1)],sumtab1$x[nrow(sumtab1)],sumtab1$y[nrow(sumtab1)],100,cumax)
-plotbio<-ggplot(sumtab1, aes(x =sumtab1$teci, y =sumtab1$Cum.Sum, xend=100, yend=100)) + geom_area(position='')+ labs(x = "TECI (%)", y='Habitat Proportion(%)')
+plotbio<-ggplot(sumtab1, aes(x =sumtab1$teci, y =sumtab1$Cum.Sum, xend=100, yend=100)) + geom_area(position='')+ labs(x = "Sorted TECI value (%)", y='Focal area proportion (%)')
 
 #Calculate area under the curve
 AUC = (trapz(sumtab1$teci,sumtab1$Cum.Sum))/100
@@ -274,92 +277,151 @@ ll <- dbSendQuery(con, del)
 dbGetStatement(ll)
 dbHasCompleted(ll)
 
+##Zonal statistics on QUES-B
+#read zone_file
+zone<-raster(zone)
+zone_lookup<-read.table(zone_lookup, header=TRUE, sep=",")
+
+#Extent handling and raster resolution land-cover maps
+if (as.character(lu1@crs)==as.character(zone@crs)){
+  print("Landuse map and planning unit map have the same projection")
+  if (res(lu1)[1]==res(zone)[1]){
+    print("Landuse map and planning unit map have the same extent")
+  } else{
+    print("Landuse map and planning unit map don't have the same extent, synchronising planning unit map...")
+    zone<-spatial_sync_raster(zone, lu1, method = "ngb")
+  }
+} else{
+  print("Landuse map and planning unit map don't have the same extent, synchronising planning unit map...")
+  zone<-spatial_sync_raster(zone, lu1, method = "ngb")
+}
+
+#generate zonal statistics
+
+zone_teci_sum<-zonal(mwfile, zone, 'sum', na.rm=TRUE)
+zone_teci_mean<-zonal(mwfile, zone, 'mean', na.rm=TRUE)
+zone_teci_sd<-zonal(mwfile, zone, 'sd', na.rm=TRUE)
+#zone_teci_min<-zonal(mwfile, zone, 'min', na.rm=T)
+#zone_teci_max<-zonal(mwfile, zone, 'max', na.rm=T)
+teci_zstat<-merge(zone_teci_sum,zone_teci_mean,by="zone")
+teci_zstat<-merge(zone_teci_sum,zone_teci_sd,by="zone")
+#teci_zstat<-merge(teci_zstat,zone_teci_min,by="zone")
+#teci_zstat<-merge(teci_zstat,zone_teci_max,by="zone")
+
+rcl.m<-cbind(teci_zstat$zone,teci_zstat$mean)
+teci_zstat_mean<-reclassify(zone, rcl.m); # PU teci value Mean
+
+rcl.sd<-cbind(teci_zstat$zone,teci_zstat$sd)
+teci_zstat_sd<-reclassify(zone, rcl.sd);# PU teci value Standard Deviation
+
+
+#OUTPUT PARAMETERS
+teci_zstat#TECI summary table
+zone_teci_sum#TECI zonal sum
+zone_teci_mean#TECI zonal mean
+zone_teci_sd#TECI zonal sd
+sumtab2#DIFA chart source table
+AUC2 #area under curve
+zone_lookup #zone_lookup table
+
+lu1 #landuse1
+habitat #selected focal area
+mwfile #TECi raster file
+centro #centroid
+zone #zone map
+
+#further development: SDM Tools fragstats
+#mean patch area calculation
+#patch number calculation
+
+
+
 
 
 #CREATE INTERACTIVE PLOT
-graph="interactive_plot.svg"
+#graph="interactive_plot.svg"
 
-i <- cbind(sumtab1$x,sumtab1$y)
-j <- SpatialPoints(i)
-spplot(j,pch=1,edge.col="black")
+#i <- cbind(sumtab1$x,sumtab1$y)
+#j <- SpatialPoints(i)
+#spplot(j,pch=1,edge.col="black")
 
-doc.tecimap = svgPlot(
-{ 
-  par(mfrow=c(1,2))
-  plot(Cum.Sum~teci, data = sumtab1, type="p", col = "black",xlim=c(0,100), ylim=c(0,100),xlab="TECI (%)", ylab="Habitat Proportion (%)")
-  plot(lu)
-  plot(j,pch=1,add=TRUE)
-}, width=12,height=6
-)
+#doc.tecimap = svgPlot(
+#{ 
+#  par(mfrow=c(1,2))
+#  plot(Cum.Sum~teci, data = sumtab1, type="p", col = "black",xlim=c(0,100), ylim=c(0,100),xlab="TECI (%)", ylab="Habitat Proportion (%)")
+#  plot(lu)
+#  plot(j,pch=1,add=TRUE)
+#}, width=12,height=6
+#)
 
-script = system.file("JavaScript","link.js",package = "SVGAnnotation")
-addECMAScripts(doc.tecimap, script, insertJS=TRUE)
+#script = system.file("JavaScript","link.js",package = "SVGAnnotation")
+#addECMAScripts(doc.tecimap, script, insertJS=TRUE)
 
-doc.link = svgPlot(
-{
-  par(mfrow=c(1,2))
-  plot(Cum.Sum~teci, data = sumtab1, type="p", col = "black", xlim=c(0,100), ylim=c(0,100),xlab="TECI (%)", ylab="Habitat Proportion (%)")
-  plot(j,pch=1)
-}, width=12,height=6
-)
+#doc.link = svgPlot(
+#{
+#  par(mfrow=c(1,2))
+#  plot(Cum.Sum~teci, data = sumtab1, type="p", col = "black", xlim=c(0,100), ylim=c(0,100),xlab="TECI (%)", ylab="Habitat Proportion (%)")
+#  plot(j,pch=1)
+#}, width=12,height=6
+#)
 
-polygonPath = getPlotPoints(doc.link)
-addToolTips(polygonPath[[1]],paste("ID: ",sumtab1$ID,", Cumulative Habitat(%) : ",sumtab1$Cum.Sum,", Teci(%) : ",sumtab1$teci))
-addToolTips(polygonPath[[2]],paste("ID: ",sumtab1$ID,", Cumulative Habitat(%) : ",sumtab1$Cum.Sum,", Teci(%) : ",sumtab1$teci))
-linkPlots(doc.link)
+#polygonPath = getPlotPoints(doc.link)
+#addToolTips(polygonPath[[1]],paste("ID: ",sumtab1$ID,", Cumulative Habitat(%) : ",sumtab1$Cum.Sum,", Teci(%) : ",sumtab1$teci))
+#addToolTips(polygonPath[[2]],paste("ID: ",sumtab1$ID,", Cumulative Habitat(%) : ",sumtab1$Cum.Sum,", Teci(%) : ",sumtab1$teci))
+#linkPlots(doc.link)
 
-lp1<-xmlRoot(doc.tecimap)
-lp2<-xmlRoot(doc.link)
+#lp1<-xmlRoot(doc.tecimap)
+#lp2<-xmlRoot(doc.link)
 
-kid1 <- xmlChildren(lp1[[4]])
-kid2 <- xmlChildren(lp2[[4]])
-length(kid1)
-length(kid2)
+#kid1 <- xmlChildren(lp1[[4]])
+#kid2 <- xmlChildren(lp2[[4]])
+#length(kid1)
+#length(kid2)
 
-lp1[[4]][[2]] <- lp2[[4]][[2]]
-lp1[[4]][[length(kid1)]] <- lp2[[4]][[length(kid2)-1]]
+#lp1[[4]][[2]] <- lp2[[4]][[2]]
+#lp1[[4]][[length(kid1)]] <- lp2[[4]][[length(kid2)-1]]
 
-saveXML(lp1, file.path(getwd(),graph))
+#saveXML(lp1, file.path(getwd(),graph))
 
 
 #WRITE REPORT
-report<-paste("Land Use Planning for Multiple Environmental Services
-========================================================
-***
+#report<-paste("Land Use Planning for Multiple Environmental Services
+#========================================================
+#***
               
 # Lembar hasil analisis QUES-B:
 # keanekaragaman hayati pada skala bentang lahan
               
-***
+#***
               
-***
+#***
 # Peta penutupan lahan `r location` tahun `r period`
-```{r fig.width=10, fig.height=9, echo=FALSE}
-levelplot(lu, col.regions=rainbow)
-```
+#```{r fig.width=10, fig.height=9, echo=FALSE}
+#levelplot(lu, col.regions=rainbow)
+#```
               
-***
+#***
               
               
 # Peta Total Edge Contrast Index (TECI) `r location` tahun `r period`
-*dalam %*
-```{r fig.width=10, fig.height=9, echo=FALSE}
-levelplot(mwfile, col.regions=function(x)rev(topo.colors(x)))
-```
+#*dalam %*
+#```{r fig.width=10, fig.height=9, echo=FALSE}
+#levelplot(mwfile, col.regions=function(x)rev(topo.colors(x)))
+#```
               
-***
+#***
               
 # Grafik Degree of Integration of Focal Area (DIFA) `r location` tahun `r period`
-```{r fig.width=10, fig.height=9, echo=FALSE}
-plot(plotbio)
-```
+#```{r fig.width=10, fig.height=9, echo=FALSE}
+#plot(plotbio)
+#```
 # Luas area dibawah kurva DIFA `r AUC2` %
               
-***
+#***
               
-<object type='image/svg+xml' data='interactive_plot.svg'>Your browser does not support SVG</object>
-***")
+#<object type='image/svg+xml' data='interactive_plot.svg'>Your browser does not support SVG</object>
+#***")
 
-write(report,file="reporthtml.Rmd")
+#write(report,file="reporthtml.Rmd")
 
-knit2html("reporthtml.Rmd", options=c("use_xhml"))
+#knit2html("reporthtml.Rmd", options=c("use_xhml"))
