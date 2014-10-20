@@ -158,7 +158,7 @@ contab2<-round(contab, digits=2)
 dirname_raster<-dirname(lu1_path)
 setwd(dirname_raster)
 
-for (i in 1:10){
+for (i in 1:3){
   mwout<-paste(lu1_path,'_mw',i, sep='')
   teci.dir<-paste(mwout,"/",list.files(mwout), sep='')
   if (file.exists(teci.dir)==TRUE){
@@ -269,7 +269,9 @@ sumtab2<-round(sumtab1,digits=2)
 colnames(sumtab2)<-c("ID","ID.centro","X.cor","Y.cor","Habitat Area (Ha)","TECI(%)", "Cumulative Habitat(%)")
 write.table(sumtab2, "QUES-B Summary calculation.csv", row.names = FALSE, sep=",")
 file.newwdout<-paste(substr(basename(newwdout), 1, nchar(basename(newwdout)) - 4),'_NA', sep='')
+file.habitat.name<-paste('focal_area_',location,'_',year, sep='')
 writeRaster(mwfile, filename=file.newwdout, format="GTiff", overwrite=TRUE)
+writeRaster(habitat, filename=file.habitat.name, format="GTiff", overwrite=TRUE)
 
 #delete all record from frg_landscape layer
 del<-paste("DELETE FROM frg_landscape_layers")
@@ -304,7 +306,7 @@ zone_teci_sd<-zonal(mwfile, zone, 'sd', na.rm=TRUE)
 #zone_teci_min<-zonal(mwfile, zone, 'min', na.rm=T)
 #zone_teci_max<-zonal(mwfile, zone, 'max', na.rm=T)
 teci_zstat<-merge(zone_teci_sum,zone_teci_mean,by="zone")
-teci_zstat<-merge(zone_teci_sum,zone_teci_sd,by="zone")
+teci_zstat<-merge(teci_zstat,zone_teci_sd,by="zone")
 #teci_zstat<-merge(teci_zstat,zone_teci_min,by="zone")
 #teci_zstat<-merge(teci_zstat,zone_teci_max,by="zone")
 
@@ -315,6 +317,14 @@ rcl.sd<-cbind(teci_zstat$zone,teci_zstat$sd)
 teci_zstat_sd<-reclassify(zone, rcl.sd);# PU teci value Standard Deviation
 
 
+#further development: SDM Tools fragstats
+#mean patch area calculation
+#patch number calculation
+foc.area.stats<- ClassStat(habitat,bkgd=0, cellsize=res(habitat)[1])
+foc.area.stats<-t(as.data.frame(foc.area.stats))
+colnames(foc.area.stats)<-c("value")
+foc.area.stats<-round(foc.area.stats[,1], digits=3)
+
 #OUTPUT PARAMETERS
 teci_zstat#TECI summary table
 zone_teci_sum#TECI zonal sum
@@ -323,6 +333,7 @@ zone_teci_sd#TECI zonal sd
 sumtab2#DIFA chart source table
 AUC2 #area under curve
 zone_lookup #zone_lookup table
+foc.area.stats #focal area class metrics
 
 lu1 #landuse1
 habitat #selected focal area
@@ -330,12 +341,10 @@ mwfile #TECi raster file
 centro #centroid
 zone #zone map
 
-#further development: SDM Tools fragstats
-#mean patch area calculation
-#patch number calculation
 
-
-
+#QUES-B database
+dbase.quesb.name<-paste("QuESB_database_", location,'_',year,'.ldbase', sep='')
+save(teci_zstat,sumtab2, AUC2, zone_lookup, foc.area.stats,lu1, habitat, mwfile, centro, zone, file=dbase.quesb.name)
 
 
 #CREATE INTERACTIVE PLOT
