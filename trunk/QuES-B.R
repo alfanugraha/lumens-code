@@ -249,9 +249,10 @@ ctab<-merge(tothab,poly.data,by="ID.grid")
 ctab<-merge(ctab,tecival,by="ID.centro")
 sort.ctab <- ctab[order(ctab$teci, decreasing=F, na.last=TRUE), ]
 sort.ctab <- sort.ctab[!(sort.ctab$sum==0),]
-sort.ctab[is.na(sort.ctab)] <- 0
+#sort.ctab[is.na(sort.ctab)] <- 0
 habcum= cumsum(sort.ctab$sum)
 sumtab1<-cbind(sort.ctab, Cum.Sum=habcum)
+#sumtab1 <- sumtab1[!(sumtab1$teci==0),]
 #sumtab$Cum.Sum<-(sumtab$Cum.Sum/sum(sumtab$sum))
 #sumtab$Cum.Sum<-(sumtab$Cum.Sum)*100
 cumax<-max(sumtab1$Cum.Sum, na.rm=TRUE)
@@ -322,16 +323,14 @@ teci_zstat_sd<-reclassify(zone, rcl.sd);# PU teci value Standard Deviation
 #patch number calculation
 foc.area.stats<- ClassStat(habitat,bkgd=0, cellsize=res(habitat)[1])
 foc.area.stats<-t(as.data.frame(foc.area.stats))
-colnames(foc.area.stats)<-c("value")
 foc.area.stats<-round(foc.area.stats[,1], digits=3)
+colnames(foc.area.stats)<-c("value")
 
 #OUTPUT PARAMETERS
 teci_zstat#TECI summary table
-zone_teci_sum#TECI zonal sum
-zone_teci_mean#TECI zonal mean
-zone_teci_sd#TECI zonal sd
-sumtab2#DIFA chart source table
-AUC2 #area under curve
+sumtab1#DIFA chart source table
+sumtab2#DIFA chart source table summarized
+AUC2 #area under curve rounded
 zone_lookup #zone_lookup table
 foc.area.stats #focal area class metrics
 
@@ -340,12 +339,13 @@ habitat #selected focal area
 mwfile #TECi raster file
 centro #centroid
 zone #zone map
+plotbio # DIFA chart
 
 
 #QUES-B database
 dbase.quesb.name<-paste("QuESB_database_", location,'_',year,'.ldbase', sep='')
-save(teci_zstat,sumtab2, AUC2, zone_lookup, foc.area.stats,lu1, habitat, mwfile, centro, zone, file=dbase.quesb.name)
-
+save(teci_zstat,sumtab1, sumtab2, AUC2, zone_lookup, foc.area.stats,lu1, habitat, mwfile, centro, zone, plotbio, file=dbase.quesb.name)
+#load(dbase.quesb.name)
 
 #CREATE INTERACTIVE PLOT
 #graph="interactive_plot.svg"
