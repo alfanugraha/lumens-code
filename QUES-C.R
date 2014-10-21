@@ -87,7 +87,7 @@ if (as.character(landuse1@crs)==as.character(landuse2@crs)){
       landuse2<-spatial_sync_raster(landuse2, landuse1, method = "ngb")
     }
   } else{
-    print("Raster map time series 1 and 2 don't have the same resplution, synchronising land-cover map...")
+    print("Raster map time series 1 and 2 don't have the same resolution, synchronising land-cover map...")
     landuse2<-spatial_sync_raster(landuse2, landuse1, method = "ngb")
   }
 } else{
