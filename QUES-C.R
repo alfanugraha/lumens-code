@@ -76,12 +76,18 @@ if (grepl("+units=m", as.character(landuse1@crs))){
 }
 
 #Extent handling and raster resolution land-cover maps
-if (as.character(landuse1@crs)==as.character(landuse2@crs)){
+if (as.character(landuse1@crs)==as.character(landuse2@crs)){ 
   print("Raster map time series 1 and 2 have the same projection")
   if (res(landuse1)[1]==res(landuse2)[1]){
-    print("Raster map time series 1 and 2 have the same extent")
+    print("Raster map time series 1 and 2 have the same resolution")
+    if (landuse1@extent==landuse2@extent){
+      print("Raster map time series 1 and 2 have the same extent")
+    } else {
+      print("Raster map time series 1 and 2 don't have the same extent, synchronising land-cover map...")
+      landuse2<-spatial_sync_raster(landuse2, landuse1, method = "ngb")
+    }
   } else{
-    print("Raster map time series 1 and 2 don't have the same extent, synchronising land-cover map...")
+    print("Raster map time series 1 and 2 don't have the same resplution, synchronising land-cover map...")
     landuse2<-spatial_sync_raster(landuse2, landuse1, method = "ngb")
   }
 } else{
@@ -94,9 +100,15 @@ if (as.character(landuse1@crs)==as.character(landuse2@crs)){
 if (as.character(landuse1@crs)==as.character(zone@crs)){
   print("Raster map time series 1 and 2 have the same projection")
   if (res(landuse1)[1]==res(zone)[1]){
-    print("Raster map time series 1 and 2 have the same extent")
+    print("Raster map time series 1 and 2 have the same resolution")
+    if (landuse1@extent==landuse2@extent){
+      print("Raster map time series 1 and 2 have the same extent")
+    } else {
+      print("Raster map time series 1 and 2 don't have the same extent, synchronising land-cover map...")
+      zone<-spatial_sync_raster(zone, landuse1, method = "ngb")
+    }
   } else{
-    print("Raster map time series 1 and 2 don't have the same extent, synchronising land-cover map...")
+    print("Raster map time series 1 and 2 don't have the same resolution, synchronising land-cover map...")
     zone<-spatial_sync_raster(zone, landuse1, method = "ngb")
   }
 } else{
@@ -165,7 +177,9 @@ data_merge$nullCek<-data_merge$em+data_merge$sq
 
 
 #generate area_zone lookup and calculate min area
-area_zone<-levels(ratify(zone, count=T))
+area_zone<-(freq(zone, useNA="no"))
+colnames(area_zone)[1]<-"ID"
+colnames(area_zone)[2]<-"COUNT"
 colnames(lookup_z)[1]<-"ID"
 area_zone<-merge(area_zone, lookup_z, by="ID")
 area<-min(sum(area_zone$COUNT), sum(data_merge$COUNT))
