@@ -46,11 +46,13 @@ library(spatial.tools)
 #outpath<-paste(Wdir)
 #gridres<-(grsize)
 
+ptm <- proc.time()
+
 #set working directory
-setwd("C:/QUES_B_DJB/Merangin_2000")
-year<-2000
-lu1<-raster("C:/QUES_B_DJB/Data_QUESB/Merangin/raster/lc_2000_Mrg1.tif")
-lu1_path<-paste("C:/QUES_B_DJB/Data_QUESB/Merangin/raster/lc_2000_Mrg1.tif")
+setwd("C:/QUES_B_DJB/Merangin_2005")
+year<-2005
+lu1<-raster("C:/QUES_B_DJB/Data_QUESB/Merangin/raster/lc_2005_Mrg1.tif")
+lu1_path<-paste("C:/QUES_B_DJB/Data_QUESB/Merangin/raster/lc_2005_Mrg1.tif")
 gridres<-10000
 windowsize<-1000
 raster.nodata<-255
@@ -98,10 +100,11 @@ sampling.rast<-resample(r,lu1, method="ngb"); #sampling grid raster file
 
 
 #Calculate total Area
-allarea<-ratify(lu1, filename='allarea.grd',count=TRUE,overwrite=TRUE)
-areadf<-as.data.frame(levels(allarea))
-totarea<-sum(areadf$COUNT)
+allarea<-na.omit(as.data.frame(freq(lu1)))
+colnames(allarea)<-c("ID","COUNT")
+totarea<-sum(allarea$COUNT)
 totarea<-(totarea*Spat_res)
+
 
 #DEFINE HABITAT
 lookup_bh<- read.table(classdesc, header=TRUE, sep=",")
@@ -109,8 +112,12 @@ lookup_bh[lookup_bh==TRUE]<-1
 lookup_bh[lookup_bh==FALSE]<-0
 lookup_bh[4]<-NULL
 colnames(lookup_bh)<-c("ID", "Name", "BIODIV")
-levels(allarea)<-merge((levels(allarea)),lookup_bh,by="ID")
-habitat<- deratify(allarea,'BIODIV')
+
+foc.area.reclass<-merge(allarea,lookup_bh,by="ID")
+foc.area.reclass$COUNT<-NULL
+foc.area.reclass$Name<-NULL
+
+habitat<- reclassify(lu1, foc.area.reclass)
 tothab<-zonal(habitat, sampling.rast, 'sum')
 tothab<-as.data.frame(tothab)
 
@@ -262,7 +269,7 @@ sumtab1[nrow(sumtab1)+1, ] <- c(sumtab1$ID.grid[nrow(sumtab1)],100,sumtab1$ID.ce
 plotbio<-ggplot(sumtab1, aes(x =sumtab1$teci, y =sumtab1$Cum.Sum, xend=100, yend=100)) + geom_area(position='')+ labs(x = "Sorted TECI value (%)", y='Focal area proportion (%)')
 
 #Calculate area under the curve
-AUC = (trapz(sumtab1$teci,sumtab1$Cum.Sum))/100
+AUC = (trapz(na.omit(sumtab1$teci),sumtab1$Cum.Sum))/100
 AUC2<-round(AUC,digits=2)
 
 #EXPORT DATA
@@ -321,9 +328,9 @@ teci_zstat_sd<-reclassify(zone, rcl.sd);# PU teci value Standard Deviation
 #further development: SDM Tools fragstats
 #mean patch area calculation
 #patch number calculation
-foc.area.stats<- ClassStat(habitat,bkgd=0, cellsize=res(habitat)[1])
+foc.area.stats<- ClassStat(habitat,bkgd=0, cellsize=(res(habitat)[1]/100))
 foc.area.stats<-t(as.data.frame(foc.area.stats))
-foc.area.stats<-round(foc.area.stats[,1], digits=3)
+foc.area.stats<-round(foc.area.stats[,1], digits=2)
 colnames(foc.area.stats)<-c("value")
 
 #OUTPUT PARAMETERS
@@ -341,12 +348,14 @@ centro #centroid
 zone #zone map
 plotbio # DIFA chart
 
+#combine teci_zstat with planning unit name
 
 #QUES-B database
 dbase.quesb.name<-paste("QuESB_database_", location,'_',year,'.ldbase', sep='')
-save(teci_zstat,sumtab1, sumtab2, AUC2, zone_lookup, foc.area.stats,lu1, habitat, mwfile, centro, zone, plotbio, file=dbase.quesb.name)
+save(teci_zstat,sumtab1, sumtab2, AUC2, zone_lookup, foc.area.stats,lu1, habitat, mwfile, centro, zone, plotbio,year, file=dbase.quesb.name)
 #load(dbase.quesb.name)
-
+time.elapsed<-proc.time() - ptm
+time.elapsed
 #CREATE INTERACTIVE PLOT
 #graph="interactive_plot.svg"
 
