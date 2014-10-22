@@ -1,13 +1,14 @@
 ##[QUES]=group
-working_directory="R://Work/Pre-QUES/Modul 1"
-landuse_1="lc_2005.tif"
-landuse_2="lc_2010.tif"
-zone_l="RTRW_zone.tif"
+working_directory="C:/QUES_B_DJB/preques_merangin_2000_2005/"
+landuse_1="C:/QUES_B_DJB/Data_QUESB/Merangin/raster/lc_2000_Mrg.tif"
+landuse_2="C:/QUES_B_DJB/Data_QUESB/Merangin/raster/lc_2005_Mrg.tif"
+zone_l="C:/QUES_B_DJB/Data_QUESB/Merangin/raster/Zona_Merangin.tif"
 period1=2000
 period2=2005
-location="Bungau"
-lookup_lc="Land_use.csv"
-lookup_zo="Zone.csv"
+location="Merangin"
+lookup_lc="C:/QUES_B_DJB/Data_QUESB/Merangin/Tabel_landuse.csv"
+lookup_zo="C:/QUES_B_DJB/Data_QUESB/Merangin/Tabel_zona_Merangin.csv"
+raster.nodata<-128
 ##luchg=output raster
 ##proj_prop=output table
 ##data_merge_sel=output table
@@ -53,6 +54,9 @@ landuse1 <- raster(landuse_1) #test comment
 landuse2 <- raster(landuse_2)
 zone <- raster(zone_l)
 
+NAvalue(landuse1)<-raster.nodata
+NAvalue(landuse2)<-raster.nodata
+NAvalue(zone)<-raster.nodata
 
 #projection handling
 if (grepl("+units=m", as.character(landuse1@crs))){
@@ -105,24 +109,34 @@ colnames(lookup_lc)<-c("ID", "CLASS")
 colnames(lookup_z)<-c("ID", "ZONE")
 
 #set raster attribute table (RAT)
-landuse1<-ratify(landuse1, filename='landuse1.grd',count=TRUE,overwrite=TRUE)
-landuse2<-ratify(landuse2, filename='landuse2.grd',count=TRUE,overwrite=TRUE)
-zone<-ratify(zone, filename='ratify.grd',count=TRUE,overwrite=TRUE)
+#landuse1<-ratify(landuse1, filename='landuse1.grd',count=TRUE,overwrite=TRUE)
+#landuse2<-ratify(landuse2, filename='landuse2.grd',count=TRUE,overwrite=TRUE)
+#zone<-ratify(zone, filename='ratify.grd',count=TRUE,overwrite=TRUE)
 
 #create land use change database
-area_lc1<-as.data.frame(levels(landuse1))
-area_lc2<-as.data.frame(levels(landuse2))
-area_zone<-as.data.frame(levels(zone))
-area<-min(sum(area_zone$COUNT), sum(area_lc1$COUNT), sum(area_lc2$COUNT))
-levels(landuse1)<-merge((levels(landuse1)),lookup_l,by="ID")
-levels(landuse2)<-merge((levels(landuse2)),lookup_l,by="ID")
-levels(zone) <- merge(area_zone,lookup_z,by="ID")
-area_lc1<-as.data.frame(levels(landuse1))
-area_lc2<-as.data.frame(levels(landuse2))
-area_zone<-as.data.frame(levels(zone))
+#area_lc1<-as.data.frame(levels(landuse1))
+#area_lc2<-as.data.frame(levels(landuse2))
+#area_zone<-as.data.frame(levels(zone))
+area_lc1<-as.data.frame(freq(landuse1))
+area_lc2<-as.data.frame(freq(landuse2))
+area_zone<-as.data.frame(freq(zone))
+area<-min(sum(area_zone[,2]), sum(area_lc1[,2]), sum(area_lc2[,2]))
+colnames(area_lc1)[1] = "ID"
 colnames(area_lc1)[2] = "COUNT_LC1"
-colnames(area_lc1)[3] = "CLASS_LC1"
+colnames(area_lc2)[1] = "ID"
 colnames(area_lc2)[2] = "COUNT_LC2"
+colnames(area_zone)[1] = "ID"
+colnames(area_zone)[2] = "COUNT_ZONE"
+
+area_lc1<-merge(area_lc1,lookup_l,by="ID")
+area_lc2<-merge(area_lc2,lookup_l,by="ID")
+area_zone<-merge(area_zone,lookup_z,by="ID")
+#area_lc1<-as.data.frame(levels(landuse1))
+#area_lc2<-as.data.frame(levels(landuse2))
+#area_zone<-as.data.frame(levels(zone))
+#colnames(area_lc1)[2] = "COUNT_LC1"
+colnames(area_lc1)[3] = "CLASS_LC1"
+#colnames(area_lc2)[2] = "COUNT_LC2"
 colnames(area_lc2)[3] = "CLASS_LC2"
 cross <- as.data.frame(crosstab((stack(landuse1,landuse2,zone))))
 colnames(cross)[1] ="ID_LC1"
@@ -161,6 +175,7 @@ chg_only_top<-head(chg_only, n=10)
 #Zonal Dominant Change
 lg_chg_zonal<-as.data.frame(NULL)
 for (i in 1:length(area_zone$ID)){
+  tryCatch({
   a<-(area_zone$ID)[i]
   lg_chg_z<-lg_chg
   lg_chg_z<-as.data.frame(lg_chg_z[which(lg_chg_z$ZONE == a),])
@@ -170,6 +185,7 @@ for (i in 1:length(area_zone$ID)){
   lg_chg_z<-lg_chg_z[c(1,2,4,3)]
   lg_chg_z_10<-head(lg_chg_z,n=10)
   lg_chg_zonal<-rbind(lg_chg_zonal,lg_chg_z_10)
+  },error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
 }
 
 # calculate basic statistic
@@ -208,9 +224,9 @@ colnames(lookup_l)[2]="LC_t2"
 cross_temp <- as.data.frame(merge(cross_temp,lookup_l,by="ID_LC2"))
 cross_temp$LU_CHG <- do.call(paste, c(cross_temp[c("LC_t1", "LC_t2")], sep = " to "))
 luchg<-overlay(landuse1,landuse2,fun=function(x,y){return(x+(y*100))})
-luchg<-ratify(luchg, filename='luchg.grd',count=TRUE,overwrite=TRUE)
-levels(luchg)<-merge((levels(luchg)),cross_temp,by="ID")
-luchg_att<-as.data.frame(levels(luchg))
+luchg_att<-as.data.frame(freq(luchg))
+colnames(luchg_att)<-c("ID","AREA")
+luchg_att<-merge(luchg_att,cross_temp,by="ID")
 
 #create land use transition matrix
 cross_temp.melt <- melt(data = cross_temp, id.vars=c('LC_t1','LC_t2'), measure.vars=c('COUNT'))
@@ -218,14 +234,12 @@ cross_temp.melt.cast <- dcast(data = cross_temp.melt, formula = LC_t1 ~ LC_t2, f
 cross_temp.melt.dbf<-cross_temp.melt.cast
 
 #CHANGE MAP
-cmap<-ratify(luchg)
-cmaptab<-merge((levels(luchg)),cross_temp,by="ID")
-cmap_length<-NROW(cmaptab)
+#cmap<-ratify(luchg)
+#cmaptab<-merge((levels(luchg)),cross_temp,by="ID")
+cmap_length<-NROW(luchg_att)
 c.legend<-1:cmap_length
-cmapleg<-as.data.frame(cbind(cmaptab[1],as.data.frame(c.legend),cmaptab[13]))
-
-levels(cmap)<-merge((levels(cmap)),cmapleg,by="ID")
-
+cmapleg<-as.data.frame(cbind(luchg_att[1],as.data.frame(c.legend),luchg_att[13]))
+#levels(cmap)<-merge((levels(cmap)),cmapleg,by="ID")
 cmapleg$ID<-NULL
 colnames(cmapleg)<-c('ID', 'Jenis perubahan penutupan lahan')
 
@@ -247,6 +261,11 @@ write.dbf(cross_temp.melt.dbf, "LU_transition_matrix.dbf")
 writeRaster(luchg, filename="lulcc_map.tif", format="GTiff", overwrite=TRUE)
 write.dbf(luchg_att, "lulcc_map.dbf")
 
+#Pr_QuES database
+dbase.preques.name<-paste("PreQuES_database_", location,'_',period1,'_',period2,'.ldbase', sep='')
+save(proj_prop,data_merge_sel, Ov_chg, cross_temp.melt.dbf, luchg, luchg_att, period1, period2, location, file=dbase.preques.name)
+
+
 #Create Map for report
 myColors1 <- brewer.pal(9,"Set1")
 myColors2 <- brewer.pal(8,"Accent")
@@ -254,9 +273,16 @@ myColors3 <- brewer.pal(12,"Paired")
 myColors4 <- brewer.pal(9, "Pastel1")
 myColors5 <- brewer.pal(8, "Set2")
 myColors6 <- brewer.pal(8, "Dark2")
-myColors7 <- brewer.pal(11, "Spectral")
-myColors  <-c(myColors7,myColors1, myColors2, myColors3, myColors4, myColors5, myColors6)
-rm(myColors7,myColors1, myColors2, myColors3, myColors4, myColors5, myColors6)
+myColors7 <- rev(brewer.pal(11, "RdYlGn"))
+myColors8 <- "#000000"
+myColors9 <- brewer.pal(12, "Set3")
+
+if (0 %in% area_lc1$ID){
+  myColors  <-c(myColors8, myColors7,myColors1, myColors2, myColors3, myColors4, myColors5, myColors6)
+} else {
+  myColors  <-c(myColors7,myColors1, myColors2, myColors3, myColors4, myColors5, myColors6)
+}
+
 
 #Landuse 1 map
 myColors.lu <- myColors[1:length(unique(area_lc1$ID))]
@@ -283,6 +309,12 @@ plot.LU2<-gplot(landuse2, maxpixels=100000) + geom_raster(aes(fill=as.factor(val
          legend.key.height = unit(0.25, "cm"),
          legend.key.width = unit(0.25, "cm"))
 
+if (0 %in% area_zone$ID){
+  myColors  <-c(myColors8, myColors5,myColors1, myColors2, myColors7, myColors4, myColors5, myColors6)
+} else {
+  myColors  <-c(myColors5,myColors1, myColors2, myColors3, myColors4, myColors7, myColors6)
+}
+
 #zone map
 myColors.Z <- myColors[1:length(unique(area_zone$ID))]
 ColScale.Z<-scale_fill_manual(name="Zone Class", breaks=area_zone$ID, labels=area_zone$ZONE, values=myColors.Z)
@@ -295,6 +327,8 @@ plot.Z<-gplot(zone, maxpixels=100000) + geom_raster(aes(fill=as.factor(value))) 
          legend.text = element_text(size = 6),
          legend.key.height = unit(0.25, "cm"),
          legend.key.width = unit(0.25, "cm"))
+
+rm(myColors8, myColors7,myColors1, myColors2, myColors3, myColors4, myColors5, myColors6, myColors9)
 
 #Largest Source of Change in Landuse
 Largest.chg<- ggplot(data=chg_only_top, aes(x=reorder(CHG_CODE, -COUNT),y=COUNT, fill=CHG_CODE))+geom_bar(stat='identity',position='dodge')+
@@ -361,30 +395,32 @@ addNewLine(rtffile)
 addParagraph(rtffile, chapter3)
 addNewLine(rtffile)
 for(i in 1:length(area_zone$ID)){
-  zonal.db<-area_zone
-  zonal.db$Z_CODE<-toupper(abbreviate(zonal.db$ZONE))
-  zona<-paste("\\b", "\\fs20", i, "\\b0","\\fs20")
-  zona_nm<-paste("\\b", "\\fs20", zonal.db$ZONE[i], "\\b0","\\fs20")
-  zona_ab<-paste("\\b", "\\fs20", zonal.db$Z_CODE[i], "\\b0","\\fs20")
-  addParagraph(rtffile, "\\b \\fs20 Ten Largest Land Use Change in Zone \\b0 \\fs20", zona,"\\b \\fs20 - \\b0 \\fs20", zona_nm, "\\b \\fs20 (\\b0 \\fs20", zona_ab, "\\b \\fs20)\\b0 \\fs20" )
-  addNewLine(rtffile, n=1)
-  lg_chg_zon<-lg_chg_zonal[which(lg_chg_zonal$ZONE == i),]
-  lg_chg_zon$ZONE<-NULL
-  lg_chg_plot<-lg_chg_zon
-  colnames(lg_chg_zon)[3]<-"Area(ha)"
-  addTable(rtffile, lg_chg_zon)
-  addNewLine(rtffile, n=1)
-  #Largest Source of Change in Planning Unit Level
-  Largest.chg.z<- ggplot(data=lg_chg_plot, aes(x=reorder(CHG_CODE, -COUNT),y=COUNT, fill=CHG_CODE))+geom_bar(stat='identity',position='dodge')+
-    geom_text(data=lg_chg_plot, aes(x=CHG_CODE, y=COUNT, label=round(COUNT, 1)),size=3, vjust=0.1) + 
-    ggtitle(paste("10 Largest Land Use Change in Zone",i, "-", zonal.db$Z_CODE[i] )) + guides(fill=FALSE) +
-    labs(x = 'Jenis perubahan penutupan lahan', y='Luas area (Ha)') + guides(fill=FALSE)+
-    theme(plot.title = element_text(lineheight= 5, face="bold")) + scale_y_continuous() +
-    theme(axis.title.x=element_blank(), axis.text.x = element_text(size=8),
-          panel.grid.major=element_blank(), panel.grid.minor=element_blank())
+  tryCatch({
+    zonal.db<-area_zone
+    zonal.db$Z_CODE<-toupper(abbreviate(zonal.db$ZONE))
+    zona<-paste("\\b", "\\fs20", i, "\\b0","\\fs20")
+    zona_nm<-paste("\\b", "\\fs20", zonal.db$ZONE[i], "\\b0","\\fs20")
+    zona_ab<-paste("\\b", "\\fs20", zonal.db$Z_CODE[i], "\\b0","\\fs20")
+    addParagraph(rtffile, "\\b \\fs20 Ten Largest Land Use Change in Zone \\b0 \\fs20", zona,"\\b \\fs20 - \\b0 \\fs20", zona_nm, "\\b \\fs20 (\\b0 \\fs20", zona_ab, "\\b \\fs20)\\b0 \\fs20" )
+    addNewLine(rtffile, n=1)
+    lg_chg_zon<-lg_chg_zonal[which(lg_chg_zonal$ZONE == i),]
+    lg_chg_zon$ZONE<-NULL
+    lg_chg_plot<-lg_chg_zon
+    colnames(lg_chg_zon)[3]<-"Area(ha)"
+    addTable(rtffile, lg_chg_zon)
+    addNewLine(rtffile, n=1)
+    #Largest Source of Change in Planning Unit Level
+    Largest.chg.z<- ggplot(data=lg_chg_plot, aes(x=reorder(CHG_CODE, -COUNT),y=COUNT, fill=CHG_CODE))+geom_bar(stat='identity',position='dodge')+
+      geom_text(data=lg_chg_plot, aes(x=CHG_CODE, y=COUNT, label=round(COUNT, 1)),size=3, vjust=0.1) + 
+      ggtitle(paste("10 Largest Land Use Change in Zone",i, "-", zonal.db$Z_CODE[i] )) + guides(fill=FALSE) +
+      labs(x = 'Jenis perubahan penutupan lahan', y='Luas area (Ha)') + guides(fill=FALSE)+
+      theme(plot.title = element_text(lineheight= 5, face="bold")) + scale_y_continuous() +
+      theme(axis.title.x=element_blank(), axis.text.x = element_text(size=8),
+            panel.grid.major=element_blank(), panel.grid.minor=element_blank())
   
-  addPlot.RTF(rtffile, plot.fun=plot, width=6.7, height=3, res=150, Largest.chg.z )
-  addNewLine(rtffile, n=1)
+    addPlot.RTF(rtffile, plot.fun=plot, width=6.7, height=3, res=150, Largest.chg.z )
+    addNewLine(rtffile, n=1)
+  },error=function(e){cat("Nice try pal! ~ please re-check your input data :",conditionMessage(e), "\n"); addParagraph(rtffile, "no data");addNewLine(rtffile)})
 }
 addNewLine(rtffile)
 done(rtffile)
