@@ -39,6 +39,16 @@ library(markdown)
 library(rtf)
 
 
+<<<<<<< .mine
+##[QUES]=group
+working_directory="R://Work/QUES-C/Paser/"
+landuse1="paser_lc05_utm50s_J.tif"
+landuse2="paser_lc10_utm50s_J.tif"
+zone="Zona_sk942_Paser.tif"
+periode1=2005
+periode2=2010
+location="Paser"
+=======
 # just delete this part before exported into model
 working_directory="C:/Users/ANugraha/Desktop/quesc"
 landuse1="C:/Users/ANugraha/Documents/LUMENS/JambiNKal/LUMENS_kal/2_Raster/03_Kutim/kutim_lc00_utm50n.tif"
@@ -47,6 +57,7 @@ zone="C:/Users/ANugraha/Documents/LUMENS/JambiNKal/4_Raster_zone/Zona_sk942_Kuti
 periode1=2000
 periode2=2005
 location="Kutai Timur"
+>>>>>>> .r56
 carbon_lookup="C:/Users/ANugraha/Documents/LUMENS/JambiNKal/3_Table/3_Kutim/Tabel_cadangan_karbon.csv"
 zone_lookup="C:/Users/ANugraha/Documents/LUMENS/JambiNKal/3_Table/3_Kutim/Tabel_zonasi.csv"
 nodata=27
@@ -75,7 +86,7 @@ if (grepl("+units=m", as.character(landuse1@crs))){
   stop("Raster map projection is unknown")
 }
 
-# Extent handling and raster resolution land-cover maps
+#====Extent handling and raster resolution land-cover maps====
 if (as.character(landuse1@crs)==as.character(landuse2@crs)){ 
   print("Raster map time series 1 and 2 have the same projection")
   if (res(landuse1)[1]==res(landuse2)[1]){
@@ -96,7 +107,7 @@ if (as.character(landuse1@crs)==as.character(landuse2@crs)){
 }
 
 
-# Extent handling and raster resolution zone map
+#====Extent handling and raster resolution land-cover maps====
 if (as.character(landuse1@crs)==as.character(zone@crs)){
   print("Raster map time series 1 and 2 have the same projection")
   if (res(landuse1)[1]==res(zone)[1]){
@@ -292,9 +303,9 @@ for (i in 1:length(zone_lookup$ID)){
 rm(tb_seq, tb_seq_total, tb_seq_z, tb_seq_z_10)
 
 #====Zonal Additional Statistics====
-name.matrix<-lookup_lc
+name.matrix<-lookup_lc[which(lookup_lc$ID !=0),]
 name.matrix$LC_CODE<-toupper(abbreviate(name.matrix$LC, minlength=4, method="both"))
-if (((length(data_merge$ID_LC1))>(length(data_merge$ID_LC2)))=='TRUE'){
+if (((length(data_merge$ID_LC1))>(length(data_merge$ID_LC2)))){
   dimention<-length(unique(data_merge$ID_LC1))
 } else{
   dimention<-length(unique(data_merge$ID_LC2))
@@ -424,7 +435,22 @@ plot.LU1<-gplot(landuse1, maxpixels=100000) + geom_raster(aes(fill=as.factor(val
          legend.key.height = unit(0.25, "cm"),
          legend.key.width = unit(0.25, "cm"))
 
+<<<<<<< .mine
+#Exporting File
+png(filename="Landuse1.png", 
+    type="cairo",
+    units="in", 
+    width=6.7, 
+    height=4,
+    res=125)
+print(plot.LU1)
+dev.off()
+file.name<-"Landuse1.png"
+
+#Landuse 2 map
+=======
 #====Landuse 2 map====
+>>>>>>> .r56
 ColScale.lu<-scale_fill_manual(name="Land Use Class", breaks=lookup_lc$ID, labels=lookup_lc$LC, values=myColors.lu)
 plot.LU2<-gplot(landuse2, maxpixels=100000) + geom_raster(aes(fill=as.factor(value))) +
   coord_equal() + ColScale.lu +
@@ -436,7 +462,22 @@ plot.LU2<-gplot(landuse2, maxpixels=100000) + geom_raster(aes(fill=as.factor(val
          legend.key.height = unit(0.25, "cm"),
          legend.key.width = unit(0.25, "cm"))
 
+<<<<<<< .mine
+#Exporting File
+png(filename="Landuse2.png", 
+    type="cairo",
+    units="in", 
+    width=6.7, 
+    height=4,  
+    res=125)
+print(plot.LU2)
+dev.off()
+file.name<-c(file.name, "Landuse2.png")
+
+#zone map
+=======
 #====zone map====
+>>>>>>> .r56
 myColors.Z <- myColors[1:length(unique(lookup_z$ID))]
 ColScale.Z<-scale_fill_manual(name="Zone Class", breaks=lookup_z$ID, labels=lookup_z$Z_NAME, values=myColors.Z)
 plot.Z<-gplot(zone, maxpixels=100000) + geom_raster(aes(fill=as.factor(value))) +
@@ -449,8 +490,23 @@ plot.Z<-gplot(zone, maxpixels=100000) + geom_raster(aes(fill=as.factor(value))) 
          legend.key.height = unit(0.25, "cm"),
          legend.key.width = unit(0.25, "cm"))
 
+#Exporting File
+png(filename="Zone.png", 
+    type="cairo",
+    units="in", 
+    width=6.7, 
+    height=4,  
+    res=125)
+print(plot.Z)
+dev.off()
 
+<<<<<<< .mine
+file.name<-c(file.name, "Zone.png")
+
+#Average Zonal Carbon Rate t1
+=======
 #====Average Zonal Carbon Rate t1====
+>>>>>>> .r56
 rcl.m.c1<-as.matrix(data_zone[,1])
 rcl.m.c2<-as.matrix(data_zone[,5])
 rcl.m<-cbind(rcl.m.c1,rcl.m.c2)
@@ -466,7 +522,22 @@ plot.Z.Avg.C.t1<-gplot(Z.Avg.C.t1, maxpixels=100000) + geom_raster(aes(fill=valu
          legend.key.height = unit(0.375, "cm"),
          legend.key.width = unit(0.375, "cm"))
 
+<<<<<<< .mine
+png(filename="Average_Z_C_t1.png", 
+    type="cairo",
+    units="in", 
+    width=6.7, 
+    height=4,  
+    res=125)
+print(plot.Z.Avg.C.t1)
+dev.off()
+
+file.name<-c(file.name, "Average_Z_C_t1.png")
+
+#Average Zonal Carbon Rate t2
+=======
 #====Average Zonal Carbon Rate t2====
+>>>>>>> .r56
 rcl.m.c1<-as.matrix(data_zone[,1])
 rcl.m.c2<-as.matrix(data_zone[,6])
 rcl.m<-cbind(rcl.m.c1,rcl.m.c2)
@@ -482,7 +553,22 @@ plot.Z.Avg.C.t2<-gplot(Z.Avg.C.t2, maxpixels=100000) + geom_raster(aes(fill=valu
          legend.key.height = unit(0.375, "cm"),
          legend.key.width = unit(0.375, "cm"))
 
+<<<<<<< .mine
+png(filename="Average_Z_C_t2.png", 
+    type="cairo",
+    units="in", 
+    width=6.7, 
+    height=4,  
+    res=125)
+print(plot.Z.Avg.C.t2)
+dev.off()
+
+file.name<-c(file.name, "Average_Z_C_t2.png")
+
+#Average Zonal Emission Rate 
+=======
 #====Average Zonal Emission Rate==== 
+>>>>>>> .r56
 rcl.m.c1<-as.matrix(data_zone[,1])
 rcl.m.c2<-as.matrix(data_zone[,7])
 rcl.m<-cbind(rcl.m.c1,rcl.m.c2)
@@ -498,7 +584,22 @@ plot.Z.Avg.em<-gplot(Z.Avg.em, maxpixels=100000) + geom_raster(aes(fill=value)) 
          legend.key.height = unit(0.375, "cm"),
          legend.key.width = unit(0.375, "cm"))
 
+<<<<<<< .mine
+png(filename="Average_Z_E.png", 
+    type="cairo",
+    units="in", 
+    width=6.7, 
+    height=4,  
+    res=125)
+print(plot.Z.Avg.em)
+dev.off()
+
+file.name<-c(file.name, "Average_Z_E.png")
+
+#Average Zonal Sequestration Rate 
+=======
 #====Average Zonal Sequestration Rate==== 
+>>>>>>> .r56
 rcl.m.c1<-as.matrix(data_zone[,1])
 rcl.m.c2<-as.matrix(data_zone[,8])
 rcl.m<-cbind(rcl.m.c1,rcl.m.c2)
@@ -514,7 +615,22 @@ plot.Z.Avg.sq<-gplot(Z.Avg.sq, maxpixels=100000) + geom_raster(aes(fill=value)) 
          legend.key.height = unit(0.375, "cm"),
          legend.key.width = unit(0.375, "cm"))
 
+<<<<<<< .mine
+png(filename="Average_Z_S.png", 
+    type="cairo",
+    units="in", 
+    width=6.7, 
+    height=4,  
+    res=125)
+print(plot.Z.Avg.sq)
+dev.off()
+
+file.name<-c(file.name, "Average_Z_S.png")
+
+#Carbon 1 map
+=======
 #====Carbon 1 map====
+>>>>>>> .r56
 y<-ceiling( maxValue(carbon1)/100)
 y<-y*100
 plot.C1  <- gplot(carbon1, maxpixels=100000) + geom_raster(aes(fill=value)) + coord_equal() +
@@ -527,7 +643,22 @@ plot.C1  <- gplot(carbon1, maxpixels=100000) + geom_raster(aes(fill=value)) + co
          legend.key.height = unit(1.5, "cm"),
          legend.key.width = unit(0.375, "cm"))
 
+<<<<<<< .mine
+png(filename="Average_C_t1.png", 
+    type="cairo",
+    units="in", 
+    width=6.7, 
+    height=4,  
+    res=125)
+print(plot.C1)
+dev.off()
+
+file.name<-c(file.name, "Average_C_t1.png")
+
+#Carbon 2 map
+=======
 #====Carbon 2 map====
+>>>>>>> .r56
 plot.C2  <- gplot(carbon2, maxpixels=100000) + geom_raster(aes(fill=value)) + coord_equal() +
   scale_fill_gradient(name="Carbon Density Level",low = "#FFCC66", high="#003300",limits=c(0,y), breaks=c(0,10,20,50,100,200,300), guide="colourbar") +
   theme(plot.title = element_text(lineheight= 5, face="bold")) +
@@ -538,8 +669,23 @@ plot.C2  <- gplot(carbon2, maxpixels=100000) + geom_raster(aes(fill=value)) + co
          legend.key.height = unit(1.5, "cm"),
          legend.key.width = unit(0.375, "cm"))
 
+png(filename="Average_C_t2.png", 
+    type="cairo",
+    units="in", 
+    width=6.7, 
+    height=4,  
+    res=125)
+print(plot.C2)
+dev.off()
 
+<<<<<<< .mine
+file.name<-c(file.name, "Average_C_t2.png")
+
+
+#Carbon Emission Map of Bungo 2005-2010
+=======
 #====Carbon Emission Map====
+>>>>>>> .r56
 plot.E  <- gplot(emission, maxpixels=100000) + geom_raster(aes(fill=value)) + coord_equal() +
   scale_fill_gradient(name="Emission (TON CO2eq)",low = "#FFCC66", high="#FF0000", guide="colourbar") +
   theme(plot.title = element_text(lineheight= 5, face="bold")) +
@@ -550,7 +696,22 @@ plot.E  <- gplot(emission, maxpixels=100000) + geom_raster(aes(fill=value)) + co
          legend.key.height = unit(0.375, "cm"),
          legend.key.width = unit(0.375, "cm"))
 
+<<<<<<< .mine
+png(filename="Average_C_E.png", 
+    type="cairo",
+    units="in", 
+    width=6.7, 
+    height=4,  
+    res=125)
+print(plot.E)
+dev.off()
+
+file.name<-c(file.name, "Average_C_E.png")
+
+#Carbon Sequestration Map of Bungo 2005-2010
+=======
 #====Carbon Sequestration Map====
+>>>>>>> .r56
 plot.S  <- gplot(sequestration, maxpixels=100000) + geom_raster(aes(fill=value)) + coord_equal() +
   scale_fill_gradient(name="Sequestration (TON CO2eq)",low = "#FFCC66", high="#000033", guide="colourbar") + 
   theme(plot.title = element_text(lineheight= 5, face="bold")) +
@@ -561,7 +722,22 @@ plot.S  <- gplot(sequestration, maxpixels=100000) + geom_raster(aes(fill=value))
          legend.key.height = unit(0.375, "cm"),
          legend.key.width = unit(0.375, "cm"))
 
+<<<<<<< .mine
+png(filename="Average_C_S.png", 
+    type="cairo",
+    units="in", 
+    width=6.7, 
+    height=4,  
+    res=125)
+print(plot.S)
+dev.off()
+
+file.name<-c(file.name, "Average_C_S.png")
+
+#Emission Rate
+=======
 #====Emission Rate====
+>>>>>>> .r56
 emissionRate<-ggplot(data=zone_carbon, aes(x=reorder(Z_NAME, -Net_em_rate), y=(zone_carbon$Net_em_rate))) + geom_bar(stat="identity", fill="Red") +
   geom_text(data=zone_carbon, aes(label=round(Net_em_rate, 1)),size=4) +
   ggtitle(paste("Net Emmission Rate of", location, period1,"-", period2 )) + guides(fill=FALSE) + ylab("CO2eq/ha.yr") +
@@ -569,7 +745,22 @@ emissionRate<-ggplot(data=zone_carbon, aes(x=reorder(Z_NAME, -Net_em_rate), y=(z
   theme(axis.title.x=element_blank(), axis.text.x = element_text(angle=20),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank())
 
+<<<<<<< .mine
+png(filename="Emission_Rate.png", 
+    type="cairo",
+    units="in", 
+    width=6.7, 
+    height=4,  
+    res=125)
+print(emissionRate)
+dev.off()
+
+chart.name<-"Emission_Rate.png"
+
+#Largest emission 
+=======
 #====Largest emission==== 
+>>>>>>> .r56
 largestEmission<-ggplot(data=tb_em_total_10, aes(x=reorder(LU_CODE, -em), y=(em))) + geom_bar(stat="identity", fill="blue") +
   geom_text(data=tb_em_total_10, aes(x=LU_CODE, y=em, label=round(em, 1)),size=3, vjust=0.1) +
   ggtitle(paste("Largest Source of Emission in", location )) + guides(fill=FALSE) + ylab("CO2eq") +
@@ -577,7 +768,22 @@ largestEmission<-ggplot(data=tb_em_total_10, aes(x=reorder(LU_CODE, -em), y=(em)
   theme(axis.title.x=element_blank(), axis.text.x = element_text(size=8),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank())
 
+<<<<<<< .mine
+png(filename="Largest_Emission.png", 
+    type="cairo",
+    units="in", 
+    width=6.7, 
+    height=4,  
+    res=125)
+print(largestEmission)
+dev.off()
+
+chart.name<-c(chart.name, "Largest_Emission.png")
+
+#Largest Sequestration
+=======
 #====Largest Sequestration====
+>>>>>>> .r56
 largestSeq<-ggplot(data=tb_seq_total_10, aes(x=reorder(LU_CODE, -seq), y=(seq))) + geom_bar(stat="identity", fill="green") +
   geom_text(data=tb_seq_total_10, aes(x=LU_CODE, y=seq, label=round(seq, 1)),size=3, vjust=0.1) +
   ggtitle(paste("Largest Source of Sequestration in", location )) + guides(fill=FALSE) + ylab("CO2eq") +
@@ -585,8 +791,23 @@ largestSeq<-ggplot(data=tb_seq_total_10, aes(x=reorder(LU_CODE, -seq), y=(seq)))
   theme(axis.title.x=element_blank(), axis.text.x = element_text(size=8),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank())
 
+png(filename="Largest_Sequestration.png", 
+    type="cairo",
+    units="in", 
+    width=6.7, 
+    height=4,  
+    res=125)
+print(largestSeq)
+dev.off()
 
+<<<<<<< .mine
+chart.name<-c(chart.name, "Largest_Sequestration.png")
+
+
+#rtf report file
+=======
 #====Create RTF Report File====
+>>>>>>> .r56
 title<-"\\b\\fs32 LUMENS-QUES Project Report\\b0\\fs20"
 sub_title<-"\\b\\fs28 Sub-modules: Carbon Dynamics Quantification\\b0\\fs20"
 test<-as.character(Sys.Date())
@@ -714,14 +935,17 @@ addNewLine(rtffile, n=1)
 addParagraph(rtffile, chapter3)
 addNewLine(rtffile)
 
+z.emission.name<-as.vector(NULL)
+z.seq.name<-as.vector(NULL)
 for(i in 1:length(zone_lookup$ID)){
+  a<-zone_lookup$ID[i]
   zona<-paste("\\b", "\\fs20", i, "\\b0","\\fs20")
-  zona_nm<-paste("\\b", "\\fs20", data_zone$ZONE[i], "\\b0","\\fs20")
+  zona_nm<-paste("\\b", "\\fs20", data_zone$Z_NAME[i], "\\b0","\\fs20")
   zona_ab<-paste("\\b", "\\fs20", data_zone$Z_CODE[i], "\\b0","\\fs20")
   addParagraph(rtffile, "\\b \\fs20 Largest Sources of Emission in Zone \\b0 \\fs20", zona,"\\b \\fs20 - \\b0 \\fs20", zona_nm, "\\b \\fs20 (\\b0 \\fs20", zona_ab, "\\b \\fs20)\\b0 \\fs20" )
   addNewLine(rtffile, n=1)
   
-  tb_em_zon<-tb_em_zonal[which(tb_em_zonal$ZONE == i),]
+  tb_em_zon<-tb_em_zonal[which(tb_em_zonal$ZONE == a),]
   tb_em_zon$ZONE<-NULL
   addTable(rtffile, tb_em_zon)
   addNewLine(rtffile, n=1)
@@ -734,17 +958,28 @@ for(i in 1:length(zone_lookup$ID)){
     theme(axis.title.x=element_blank(), axis.text.x = element_text(size=8),
           panel.grid.major=element_blank(), panel.grid.minor=element_blank())
   
+  png(filename=paste("Largest_Emission_Z_",a,".png", sep=""), 
+      type="cairo",
+      units="in", 
+      width=6.7, 
+      height=4,  
+      res=125)
+  print(largestE.Z)
+  dev.off()
+  
+  z.emission.name<-c(z.emission.name, paste("Largest_Emission_Z_",a,".png", sep=""))
+  
   addPlot.RTF(rtffile, plot.fun=plot, width=6.7, height=3, res=150, largestE.Z )
   addNewLine(rtffile, n=1)
   
   addParagraph(rtffile, "\\b \\fs20 Largest Sources of Sequestration in Zone \\b0 \\fs20", zona,"\\b \\fs20 - \\b0 \\fs20", zona_nm, "\\b \\fs20 (\\b0 \\fs20", zona_ab, "\\b \\fs20)\\b0 \\fs20" )
   addNewLine(rtffile, n=1)
   
-  tb_seq_zon<-tb_seq_zonal[which(tb_seq_zonal$ZONE == i),]
+  tb_seq_zon<-tb_seq_zonal[which(tb_seq_zonal$ZONE == a),]
   tb_seq_zon$ZONE<-NULL
   addTable(rtffile, tb_seq_zon)
   addNewLine(rtffile, n=1)
-  
+
   #Largest Sequestration
   largestS.Z<-ggplot(data=tb_seq_zon, aes(x=reorder(LU_CODE, -seq), y=(seq))) + geom_bar(stat="identity", fill="green") +
     geom_text(data=tb_seq_zon, aes(x=LU_CODE, y=seq, label=round(seq, 1)),size=3, vjust=0.1) +
@@ -753,6 +988,17 @@ for(i in 1:length(zone_lookup$ID)){
     theme(axis.title.x=element_blank(), axis.text.x = element_text(size=8),
           panel.grid.major=element_blank(), panel.grid.minor=element_blank())
   
+  png(filename=paste("Largest_Seq_Z_",a,".png", sep=""), 
+      type="cairo",
+      units="in", 
+      width=6.7, 
+      height=4,  
+      res=125)
+  print(largestS.Z)
+  dev.off()
+  
+  z.seq.name<-c(z.seq.name, paste("Largest_Seq_Z_",a,".png", sep=""))
+  
   addPlot.RTF(rtffile, plot.fun=plot, width=6.7, height=3, res=150, largestS.Z )
   addNewLine(rtffile, n=1)
   
@@ -760,3 +1006,4 @@ for(i in 1:length(zone_lookup$ID)){
 rm(largestE.Z, largestS.Z)
 done(rtffile)
 
+#tryCatch

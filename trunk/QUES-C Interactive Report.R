@@ -53,16 +53,16 @@ nodata=27
 
 time_start<-paste(eval(parse(text=(paste("Sys.time ()")))), sep="")
 
-# set working directory
+#====Set Working Directory====
 setwd(working_directory)
 
-# load datasets
-landuse1 <- raster(landuse1) #test comment
+#====Load Datasets====
+landuse1 <- raster(landuse1) 
 landuse2 <- raster(landuse2)
 zone <- raster(zone)
 
 
-#projection handling
+#====Projection and Extend Handling====
 if (grepl("+units=m", as.character(landuse1@crs))){
   print("Raster maps have projection in meter unit")
   Spat_res<-res(landuse1)[1]*res(landuse1)[2]/10000
@@ -96,7 +96,7 @@ if (as.character(landuse1@crs)==as.character(landuse2@crs)){
 }
 
 
-#Extent handling and raster resolution zone map
+# Extent handling and raster resolution land-cover maps
 if (as.character(landuse1@crs)==as.character(zone@crs)){
   print("Raster map time series 1 and 2 have the same projection")
   if (res(landuse1)[1]==res(zone)[1]){
@@ -116,12 +116,13 @@ if (as.character(landuse1@crs)==as.character(zone@crs)){
   zone<-spatial_sync_raster(zone, landuse1, method = "ngb")
 }
 
-# load look up tables
+#====Load Lookup Tables====
 lookup_c<- read.table(carbon_lookup, header=TRUE, sep=",",)
 lookup_z <- read.table(zone_lookup, header=TRUE, sep=",",)
+lookup_c<-lookup_c[which(lookup_c[1] != nodata),]
 lookup_lc<-lookup_c
 
-# set proj prop
+#====Set Project Properties====
 title=location
 tab_title<-as.data.frame(title)
 period1=periode1
@@ -133,7 +134,7 @@ proj_prop$period2<-period2
 proj_prop$period <- do.call(paste, c(proj_prop[c("period1", "period2")], sep = " - "))
 
 
-#Carbon accounting process
+#====Carbon Accounting Process====
 NAvalue(landuse1)<-nodata
 NAvalue(landuse2)<-nodata
 rcl.m.c1<-as.matrix(lookup_c[,1])
@@ -145,8 +146,8 @@ chk_em<-carbon1>carbon2
 chk_sq<-carbon1<carbon2
 emission<-((carbon1-carbon2)*3.67)*chk_em
 sequestration<-((carbon2-carbon1)*3.67)*chk_sq
-stack<-stack(landuse1,landuse2, zone)
-cross<-as.data.frame(crosstab(stack))
+rasterStack<-stack(landuse1,landuse2, zone)
+cross<-as.data.frame(crosstab(rasterStack))
 colnames(cross)[1] ="ID_LC1"
 colnames(cross)[2] = "ID_LC2"
 colnames(cross)[3] = "ZONE"
@@ -163,7 +164,8 @@ colnames(lookup_z)[1]="ZONE"
 colnames(lookup_z)[2]="Z_NAME"
 data_merge <- as.data.frame(merge(data_merge,lookup_z,by="ZONE"))
 rm(cross)
-#modify carbon stock density ecah time series
+
+#===Modify Carbon Stock Density for Each Time Series====
 data_merge$CARBON_t1<-data_merge$CARBON_t1*Spat_res
 data_merge$CARBON_t2<-data_merge$CARBON_t2*Spat_res
 
@@ -176,7 +178,7 @@ data_merge$null<-0
 data_merge$nullCek<-data_merge$em+data_merge$sq
 
 
-#generate area_zone lookup and calculate min area
+#===Generate area_zone Lookup and Calculate Min Area
 area_zone<-(freq(zone, useNA="no"))
 colnames(area_zone)[1]<-"ID"
 colnames(area_zone)[2]<-"COUNT"
@@ -184,7 +186,7 @@ colnames(lookup_z)[1]<-"ID"
 area_zone<-merge(area_zone, lookup_z, by="ID")
 area<-min(sum(area_zone$COUNT), sum(data_merge$COUNT))
 
-#calculate emission for each planning unit
+#====Calculate Emission for each Planning Unit====
 zone_emission <- as.data.frame(zonal((Spat_res*emission),zone,'sum')) #adjust emission by actual raster area
 zone_sequestration <- as.data.frame(zonal((Spat_res*sequestration),zone,'sum'))#adjust sequestration by actual raster area
 colnames(zone_emission)[1] = "ID"
@@ -198,7 +200,7 @@ zone_carbon$Net_em_rate<-round((zone_carbon$Net_em/zone_carbon$COUNT/period), di
 zone_carbon$Sq_tot<-round(zone_carbon$Sq_tot, digits=3)
 #zone_carbon[,4:7]<-round(zone_carbon[,4:7], digits=3)
 
-# create final summary of emission calculation at landscape level
+#====Create Final Summary of Emission Calculation at Landscape Level
 fs_id<-c(1,2,3,4,5,6,7)
 fs_cat<-c("Period", "Total area", "Total Emission (Ton CO2eq)", "Total Sequestration (Ton CO2eq)", "Net emission (Ton CO2eq)", "Emission rate (Ton CO2/yr)","Emission rate per-unit area (Ton CO2eq/ha.yr)")
 fs_em<-sum(zone_carbon$Em_tot)
@@ -210,9 +212,9 @@ fs_summary<-c(proj_prop$period, area,round(fs_em, digits=3),round(fs_sq, digits=
 fs_table<-data.frame(fs_id,fs_cat,fs_summary)
 colnames(fs_table)<-c("ID", "Category", "Summary")
 
-#create QUES-C database
+#====CREATE QuES-C Database====
 
-#make zonal statistics database
+#====Zonal Statistics Database====
 lg<-length(unique(data_merge$ZONE))
 zone_lookup<-area_zone
 data_zone<-area_zone
@@ -227,12 +229,12 @@ for(a in 1:lg){
 }
 data_zone[,5:8]<-round(data_zone[,5:8],digits=3)
 
-#calculate largest source of emission
+#====Calculate Largest Source of Emission====
 data_merge_sel <- data_merge[ which(data_merge$nullCek > data_merge$null),]
 order_sq <- as.data.frame(data_merge[order(-data_merge$sq),])
 order_em <- as.data.frame(data_merge[order(-data_merge$em),])
 
-#Total Emission
+#====Total Emission====
 tb_em_total<-as.data.frame(cbind(order_em$LU_CHG, as.data.frame(round(order_em$em, digits=3))))
 colnames(tb_em_total)<-c("LU_CHG", "em")
 tb_em_total<-aggregate(em~LU_CHG,data=tb_em_total,FUN=sum)
@@ -242,7 +244,7 @@ tb_em_total<-tb_em_total[c(3,1,2)]
 tb_em_total$Percentage<-as.numeric(format(round((tb_em_total$em / sum(tb_em_total$em) * 100),2), nsmall=2))
 tb_em_total_10<-head(tb_em_total,n=10)
 
-#Zonal Emission
+#====Zonal Emission====
 tb_em_zonal<-as.data.frame(NULL)
 for (i in 1:length(zone_lookup$ID)){
   a<-(zone_lookup$ID)[i]
@@ -259,7 +261,7 @@ for (i in 1:length(zone_lookup$ID)){
 }
 rm(tb_em, tb_em_total, tb_em_z, tb_em_z_10)
 
-#Total Sequestration
+#====Total Sequestration====
 tb_seq_total<-as.data.frame(cbind(order_sq$LU_CHG, as.data.frame(round(order_sq$sq, digits=3))))
 colnames(tb_seq_total)<-c("LU_CHG", "seq")
 tb_seq_total<-aggregate(seq~LU_CHG,data=tb_seq_total,FUN=sum)
@@ -269,7 +271,7 @@ tb_seq_total<-tb_seq_total[c(3,1,2)]
 tb_seq_total$Percentage<-as.numeric(format(round((tb_seq_total$seq / sum(tb_seq_total$seq) * 100),2), nsmall=2))
 tb_seq_total_10<-head(tb_seq_total,n=10)
 
-#Zonal Sequestration
+#====Zonal Sequestration====
 tb_seq_zonal<-as.data.frame(NULL)
 for (i in 1:length(zone_lookup$ID)){
   a<-(zone_lookup$ID)[i]
@@ -286,7 +288,7 @@ for (i in 1:length(zone_lookup$ID)){
 }
 rm(tb_seq, tb_seq_total, tb_seq_z, tb_seq_z_10)
 
-#Zonal Additional Statistics
+#====Zonal Additional Statistics====
 name.matrix<-lookup_lc[which(lookup_lc$ID !=0),]
 name.matrix$LC_CODE<-toupper(abbreviate(name.matrix$LC, minlength=4, method="both"))
 if (((length(data_merge$ID_LC1))>(length(data_merge$ID_LC2)))){
@@ -295,7 +297,7 @@ if (((length(data_merge$ID_LC1))>(length(data_merge$ID_LC2)))){
   dimention<-length(unique(data_merge$ID_LC2))
 }
 
-#Zonal Emission matrix
+#====Zonal Emission matrix====
 e.m.z<-matrix(0, nrow=dimention, ncol=dimention)
 em.matrix.zonal<-as.data.frame(NULL)
 for (k in 1:length(zone_lookup$ID)){
@@ -314,7 +316,7 @@ colnames(em.matrix.zonal)<-c("ZONE","LC_CODE",as.vector(name.matrix$LC_CODE))
 rm(em.data, e.m.z, e.m.z.c)
 
 
-#Total Emission matrix
+#====Total Emission matrix====
 e.m<-matrix(0, nrow=dimention, ncol=dimention)
 for (i in 1:nrow(e.m)){
   for (j in 1:ncol(e.m)){
@@ -327,7 +329,7 @@ em.matrix.total<-as.data.frame(cbind(name.matrix$LC_CODE,e.m))
 colnames(em.matrix.total)<-c("LC_CODE",as.vector(name.matrix$LC_CODE))
 rm(em.data, e.m)
 
-#Zonal Sequestration matrix
+#====Zonal Sequestration matrix====
 s.m.z<-matrix(0, nrow=dimention, ncol=dimention)
 seq.matrix.zonal<-as.data.frame(NULL)
 for (k in 1:length(zone_lookup$ID)){
@@ -345,7 +347,7 @@ for (k in 1:length(zone_lookup$ID)){
 colnames(seq.matrix.zonal)<-c("ZONE","LC_CODE",as.vector(name.matrix$LC_CODE))
 rm(seq.data, s.m.z, s.m.z.c)
 
-#Total Sequestration matrix
+#====Total Sequestration matrix====
 s.m<-matrix(0, nrow=dimention, ncol=dimention)
 for (i in 1:nrow(s.m)){
   for (j in 1:ncol(s.m)){
@@ -358,18 +360,11 @@ seq.matrix.total<-as.data.frame(cbind(name.matrix$LC_CODE,s.m))
 colnames(seq.matrix.total)<-c("LC_CODE",as.vector(name.matrix$LC_CODE))
 rm(seq.data, s.m, order_em, order_sq)
 
-#produce chart and map
-#par(mfrow=c(3,2))
-#plot(landuse1,main='Land Use Map t1')
-#plot(landuse2,main='Land Use Map t2')
-#plot(carbon1,main='Carbon Density Map t1')
-#plot(carbon2, main='Carbon Density Map t2')
-
 work_dir<-paste(working_directory,"/Result", sep="")
 dir.create("Result")
 setwd(work_dir)
 
-#export analysis result
+#====Export Analysis Result====
 carbontiff1<-carbon1
 carbontiff2<-carbon2
 writeRaster(carbon1, filename="carbon1.tif", format="GTiff", overwrite=TRUE)
@@ -391,11 +386,11 @@ for (i in 1:length(zone_lookup$ID)){
   write.dbf(seq_matrix_z,paste("Sequestration_Matrix_Zone_",i,sep=""))
 }
 
-#REARRANGE zone carbon
+#====Rearrange zone carbon====
 zone_carbon_pub<-zone_carbon
 colnames(zone_carbon_pub) <- c("ID", "Area (Ha)", "Land cover class", "Total emission (Ton CO2/Ha)", "Total sequestration(Ton CO2/Ha)", "Net emission (Ton CO2/Ha)", "Emission rate (Ton CO2/Ha.yr)")
 
-#Create Map for report
+#====Create Map for report====
 myColors1 <- brewer.pal(9,"Set1")
 myColors2 <- brewer.pal(8,"Accent")
 myColors3 <- brewer.pal(12,"Paired")
@@ -406,7 +401,7 @@ myColors7 <- brewer.pal(11, "Spectral")
 myColors  <-c(myColors7,myColors1, myColors2, myColors3, myColors4, myColors5, myColors6)
 rm(myColors7,myColors1, myColors2, myColors3, myColors4, myColors5, myColors6)
 
-#Landuse 1 map
+#====Landuse 1 map====
 myColors.lu <- myColors[1:length(unique(lookup_lc$ID))]
 ColScale.lu<-scale_fill_manual(name="Land Use Class", breaks=lookup_lc$ID, labels=lookup_lc$LC, values=myColors.lu)
 plot.LU1<-gplot(landuse1, maxpixels=100000) + geom_raster(aes(fill=as.factor(value))) +
@@ -419,7 +414,7 @@ plot.LU1<-gplot(landuse1, maxpixels=100000) + geom_raster(aes(fill=as.factor(val
          legend.key.height = unit(0.25, "cm"),
          legend.key.width = unit(0.25, "cm"))
 
-#Exporting File
+#====Exporting File====
 png(filename="Landuse1.png", 
     type="cairo",
     units="in", 
@@ -430,7 +425,7 @@ print(plot.LU1)
 dev.off()
 file.name<-"Landuse1.png"
 
-#Landuse 2 map
+#====Landuse 2 map====
 ColScale.lu<-scale_fill_manual(name="Land Use Class", breaks=lookup_lc$ID, labels=lookup_lc$LC, values=myColors.lu)
 plot.LU2<-gplot(landuse2, maxpixels=100000) + geom_raster(aes(fill=as.factor(value))) +
   coord_equal() + ColScale.lu +
@@ -442,7 +437,7 @@ plot.LU2<-gplot(landuse2, maxpixels=100000) + geom_raster(aes(fill=as.factor(val
          legend.key.height = unit(0.25, "cm"),
          legend.key.width = unit(0.25, "cm"))
 
-#Exporting File
+#====Exporting File====
 png(filename="Landuse2.png", 
     type="cairo",
     units="in", 
@@ -453,7 +448,7 @@ print(plot.LU2)
 dev.off()
 file.name<-c(file.name, "Landuse2.png")
 
-#zone map
+#====zone map====
 myColors.Z <- myColors[1:length(unique(lookup_z$ID))]
 ColScale.Z<-scale_fill_manual(name="Zone Class", breaks=lookup_z$ID, labels=lookup_z$Z_NAME, values=myColors.Z)
 plot.Z<-gplot(zone, maxpixels=100000) + geom_raster(aes(fill=as.factor(value))) +
@@ -466,7 +461,7 @@ plot.Z<-gplot(zone, maxpixels=100000) + geom_raster(aes(fill=as.factor(value))) 
          legend.key.height = unit(0.25, "cm"),
          legend.key.width = unit(0.25, "cm"))
 
-#Exporting File
+#====Exporting File====
 png(filename="Zone.png", 
     type="cairo",
     units="in", 
@@ -478,7 +473,7 @@ dev.off()
 
 file.name<-c(file.name, "Zone.png")
 
-#Average Zonal Carbon Rate t1
+#====Average Zonal Carbon Rate t1====
 rcl.m.c1<-as.matrix(data_zone[,1])
 rcl.m.c2<-as.matrix(data_zone[,5])
 rcl.m<-cbind(rcl.m.c1,rcl.m.c2)
@@ -505,7 +500,7 @@ dev.off()
 
 file.name<-c(file.name, "Average_Z_C_t1.png")
 
-#Average Zonal Carbon Rate t2
+#====Average Zonal Carbon Rate t2====
 rcl.m.c1<-as.matrix(data_zone[,1])
 rcl.m.c2<-as.matrix(data_zone[,6])
 rcl.m<-cbind(rcl.m.c1,rcl.m.c2)
@@ -532,7 +527,7 @@ dev.off()
 
 file.name<-c(file.name, "Average_Z_C_t2.png")
 
-#Average Zonal Emission Rate 
+#====Average Zonal Emission Rate====
 rcl.m.c1<-as.matrix(data_zone[,1])
 rcl.m.c2<-as.matrix(data_zone[,7])
 rcl.m<-cbind(rcl.m.c1,rcl.m.c2)
@@ -559,7 +554,7 @@ dev.off()
 
 file.name<-c(file.name, "Average_Z_E.png")
 
-#Average Zonal Sequestration Rate 
+#====Average Zonal Sequestration Rate==== 
 rcl.m.c1<-as.matrix(data_zone[,1])
 rcl.m.c2<-as.matrix(data_zone[,8])
 rcl.m<-cbind(rcl.m.c1,rcl.m.c2)
@@ -586,7 +581,7 @@ dev.off()
 
 file.name<-c(file.name, "Average_Z_S.png")
 
-#Carbon 1 map
+#====Carbon 1 map====
 y<-ceiling( maxValue(carbon1)/100)
 y<-y*100
 plot.C1  <- gplot(carbon1, maxpixels=100000) + geom_raster(aes(fill=value)) + coord_equal() +
@@ -610,7 +605,7 @@ dev.off()
 
 file.name<-c(file.name, "Average_C_t1.png")
 
-#Carbon 2 map
+#====Carbon 2 map====
 plot.C2  <- gplot(carbon2, maxpixels=100000) + geom_raster(aes(fill=value)) + coord_equal() +
   scale_fill_gradient(name="Carbon Density Level",low = "#FFCC66", high="#003300",limits=c(0,y), breaks=c(0,10,20,50,100,200,300), guide="colourbar") +
   theme(plot.title = element_text(lineheight= 5, face="bold")) +
@@ -633,7 +628,7 @@ dev.off()
 file.name<-c(file.name, "Average_C_t2.png")
 
 
-#Carbon Emission Map of Bungo 2005-2010
+#====Carbon Emission Map====
 plot.E  <- gplot(emission, maxpixels=100000) + geom_raster(aes(fill=value)) + coord_equal() +
   scale_fill_gradient(name="Emission (TON CO2eq)",low = "#FFCC66", high="#FF0000", guide="colourbar") +
   theme(plot.title = element_text(lineheight= 5, face="bold")) +
@@ -655,7 +650,7 @@ dev.off()
 
 file.name<-c(file.name, "Average_C_E.png")
 
-#Carbon Sequestration Map of Bungo 2005-2010
+#====Carbon Sequestration Map====
 plot.S  <- gplot(sequestration, maxpixels=100000) + geom_raster(aes(fill=value)) + coord_equal() +
   scale_fill_gradient(name="Sequestration (TON CO2eq)",low = "#FFCC66", high="#000033", guide="colourbar") + 
   theme(plot.title = element_text(lineheight= 5, face="bold")) +
@@ -677,7 +672,7 @@ dev.off()
 
 file.name<-c(file.name, "Average_C_S.png")
 
-#Emission Rate
+#====Emission Rate====
 emissionRate<-ggplot(data=zone_carbon, aes(x=reorder(Z_NAME, -Net_em_rate), y=(zone_carbon$Net_em_rate))) + geom_bar(stat="identity", fill="Red") +
   geom_text(data=zone_carbon, aes(label=round(Net_em_rate, 1)),size=4) +
   ggtitle(paste("Net Emmission Rate of", location, period1,"-", period2 )) + guides(fill=FALSE) + ylab("CO2eq/ha.yr") +
@@ -696,7 +691,7 @@ dev.off()
 
 chart.name<-"Emission_Rate.png"
 
-#Largest emission 
+#====Largest emission====
 largestEmission<-ggplot(data=tb_em_total_10, aes(x=reorder(LU_CODE, -em), y=(em))) + geom_bar(stat="identity", fill="blue") +
   geom_text(data=tb_em_total_10, aes(x=LU_CODE, y=em, label=round(em, 1)),size=3, vjust=0.1) +
   ggtitle(paste("Largest Source of Emission in", location )) + guides(fill=FALSE) + ylab("CO2eq") +
@@ -715,7 +710,7 @@ dev.off()
 
 chart.name<-c(chart.name, "Largest_Emission.png")
 
-#Largest Sequestration
+#====Largest Sequestration====
 largestSeq<-ggplot(data=tb_seq_total_10, aes(x=reorder(LU_CODE, -seq), y=(seq))) + geom_bar(stat="identity", fill="green") +
   geom_text(data=tb_seq_total_10, aes(x=LU_CODE, y=seq, label=round(seq, 1)),size=3, vjust=0.1) +
   ggtitle(paste("Largest Source of Sequestration in", location )) + guides(fill=FALSE) + ylab("CO2eq") +
@@ -735,7 +730,7 @@ dev.off()
 chart.name<-c(chart.name, "Largest_Sequestration.png")
 
 
-#rtf report file
+#====Create RTF Report File====
 title<-"\\b\\fs32 LUMENS-QUES Project Report\\b0\\fs20"
 sub_title<-"\\b\\fs28 Sub-modules: Carbon Dynamics Quantification\\b0\\fs20"
 test<-as.character(Sys.Date())
