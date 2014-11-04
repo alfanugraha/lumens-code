@@ -3,6 +3,7 @@
 ##landuse1=raster
 ##landuse2=raster
 ##zone=raster
+##nodata=number 0
 ##periode1=number 2010
 ##periode2=number 2015
 ##location=string
