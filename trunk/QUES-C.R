@@ -49,8 +49,8 @@ periode1=2005
 periode2=2010
 location="Paser"
 =======
-# just delete this part before exported into model
-working_directory="C:/Users/ANugraha/Desktop/quesc"
+  # just delete this part before exported into model
+  working_directory="C:/Users/ANugraha/Desktop/quesc"
 landuse1="C:/Users/ANugraha/Documents/LUMENS/JambiNKal/LUMENS_kal/2_Raster/03_Kutim/kutim_lc00_utm50n.tif"
 landuse2="C:/Users/ANugraha/Documents/LUMENS/JambiNKal/LUMENS_kal/2_Raster/03_Kutim/kutim_lc05_utm50n.tif"
 zone="C:/Users/ANugraha/Documents/LUMENS/JambiNKal/4_Raster_zone/Zona_sk942_Kutim.tif"
@@ -449,7 +449,7 @@ file.name<-"Landuse1.png"
 
 #Landuse 2 map
 =======
-#====Landuse 2 map====
+  #====Landuse 2 map====
 >>>>>>> .r56
 ColScale.lu<-scale_fill_manual(name="Land Use Class", breaks=lookup_lc$ID, labels=lookup_lc$LC, values=myColors.lu)
 plot.LU2<-gplot(landuse2, maxpixels=100000) + geom_raster(aes(fill=as.factor(value))) +
@@ -476,7 +476,7 @@ file.name<-c(file.name, "Landuse2.png")
 
 #zone map
 =======
-#====zone map====
+  #====zone map====
 >>>>>>> .r56
 myColors.Z <- myColors[1:length(unique(lookup_z$ID))]
 ColScale.Z<-scale_fill_manual(name="Zone Class", breaks=lookup_z$ID, labels=lookup_z$Z_NAME, values=myColors.Z)
@@ -505,7 +505,7 @@ file.name<-c(file.name, "Zone.png")
 
 #Average Zonal Carbon Rate t1
 =======
-#====Average Zonal Carbon Rate t1====
+  #====Average Zonal Carbon Rate t1====
 >>>>>>> .r56
 rcl.m.c1<-as.matrix(data_zone[,1])
 rcl.m.c2<-as.matrix(data_zone[,5])
@@ -536,7 +536,7 @@ file.name<-c(file.name, "Average_Z_C_t1.png")
 
 #Average Zonal Carbon Rate t2
 =======
-#====Average Zonal Carbon Rate t2====
+  #====Average Zonal Carbon Rate t2====
 >>>>>>> .r56
 rcl.m.c1<-as.matrix(data_zone[,1])
 rcl.m.c2<-as.matrix(data_zone[,6])
@@ -567,7 +567,7 @@ file.name<-c(file.name, "Average_Z_C_t2.png")
 
 #Average Zonal Emission Rate 
 =======
-#====Average Zonal Emission Rate==== 
+  #====Average Zonal Emission Rate==== 
 >>>>>>> .r56
 rcl.m.c1<-as.matrix(data_zone[,1])
 rcl.m.c2<-as.matrix(data_zone[,7])
@@ -598,7 +598,7 @@ file.name<-c(file.name, "Average_Z_E.png")
 
 #Average Zonal Sequestration Rate 
 =======
-#====Average Zonal Sequestration Rate==== 
+  #====Average Zonal Sequestration Rate==== 
 >>>>>>> .r56
 rcl.m.c1<-as.matrix(data_zone[,1])
 rcl.m.c2<-as.matrix(data_zone[,8])
@@ -629,7 +629,7 @@ file.name<-c(file.name, "Average_Z_S.png")
 
 #Carbon 1 map
 =======
-#====Carbon 1 map====
+  #====Carbon 1 map====
 >>>>>>> .r56
 y<-ceiling( maxValue(carbon1)/100)
 y<-y*100
@@ -657,7 +657,7 @@ file.name<-c(file.name, "Average_C_t1.png")
 
 #Carbon 2 map
 =======
-#====Carbon 2 map====
+  #====Carbon 2 map====
 >>>>>>> .r56
 plot.C2  <- gplot(carbon2, maxpixels=100000) + geom_raster(aes(fill=value)) + coord_equal() +
   scale_fill_gradient(name="Carbon Density Level",low = "#FFCC66", high="#003300",limits=c(0,y), breaks=c(0,10,20,50,100,200,300), guide="colourbar") +
@@ -684,7 +684,7 @@ file.name<-c(file.name, "Average_C_t2.png")
 
 #Carbon Emission Map of Bungo 2005-2010
 =======
-#====Carbon Emission Map====
+  #====Carbon Emission Map====
 >>>>>>> .r56
 plot.E  <- gplot(emission, maxpixels=100000) + geom_raster(aes(fill=value)) + coord_equal() +
   scale_fill_gradient(name="Emission (TON CO2eq)",low = "#FFCC66", high="#FF0000", guide="colourbar") +
@@ -710,7 +710,7 @@ file.name<-c(file.name, "Average_C_E.png")
 
 #Carbon Sequestration Map of Bungo 2005-2010
 =======
-#====Carbon Sequestration Map====
+  #====Carbon Sequestration Map====
 >>>>>>> .r56
 plot.S  <- gplot(sequestration, maxpixels=100000) + geom_raster(aes(fill=value)) + coord_equal() +
   scale_fill_gradient(name="Sequestration (TON CO2eq)",low = "#FFCC66", high="#000033", guide="colourbar") + 
@@ -736,7 +736,7 @@ file.name<-c(file.name, "Average_C_S.png")
 
 #Emission Rate
 =======
-#====Emission Rate====
+  #====Emission Rate====
 >>>>>>> .r56
 emissionRate<-ggplot(data=zone_carbon, aes(x=reorder(Z_NAME, -Net_em_rate), y=(zone_carbon$Net_em_rate))) + geom_bar(stat="identity", fill="Red") +
   geom_text(data=zone_carbon, aes(label=round(Net_em_rate, 1)),size=4) +
@@ -759,7 +759,7 @@ chart.name<-"Emission_Rate.png"
 
 #Largest emission 
 =======
-#====Largest emission==== 
+  #====Largest emission==== 
 >>>>>>> .r56
 largestEmission<-ggplot(data=tb_em_total_10, aes(x=reorder(LU_CODE, -em), y=(em))) + geom_bar(stat="identity", fill="blue") +
   geom_text(data=tb_em_total_10, aes(x=LU_CODE, y=em, label=round(em, 1)),size=3, vjust=0.1) +
@@ -782,7 +782,7 @@ chart.name<-c(chart.name, "Largest_Emission.png")
 
 #Largest Sequestration
 =======
-#====Largest Sequestration====
+  #====Largest Sequestration====
 >>>>>>> .r56
 largestSeq<-ggplot(data=tb_seq_total_10, aes(x=reorder(LU_CODE, -seq), y=(seq))) + geom_bar(stat="identity", fill="green") +
   geom_text(data=tb_seq_total_10, aes(x=LU_CODE, y=seq, label=round(seq, 1)),size=3, vjust=0.1) +
@@ -806,7 +806,7 @@ chart.name<-c(chart.name, "Largest_Sequestration.png")
 
 #rtf report file
 =======
-#====Create RTF Report File====
+  #====Create RTF Report File====
 >>>>>>> .r56
 title<-"\\b\\fs32 LUMENS-QUES Project Report\\b0\\fs20"
 sub_title<-"\\b\\fs28 Sub-modules: Carbon Dynamics Quantification\\b0\\fs20"
@@ -979,7 +979,7 @@ for(i in 1:length(zone_lookup$ID)){
   tb_seq_zon$ZONE<-NULL
   addTable(rtffile, tb_seq_zon)
   addNewLine(rtffile, n=1)
-
+  
   #Largest Sequestration
   largestS.Z<-ggplot(data=tb_seq_zon, aes(x=reorder(LU_CODE, -seq), y=(seq))) + geom_bar(stat="identity", fill="green") +
     geom_text(data=tb_seq_zon, aes(x=LU_CODE, y=seq, label=round(seq, 1)),size=3, vjust=0.1) +
