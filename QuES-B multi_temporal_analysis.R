@@ -27,6 +27,8 @@ library(ggplot2)
 library(pracma)
 library(spatial.tools)
 library(plyr)
+library(rtf)
+library(gridExtra)
 
 #set working directory
 #setwd(Wdir)
@@ -41,7 +43,7 @@ library(plyr)
 #outpath<-paste(Wdir)
 #gridres<-(grsize)
 
-time_start <- proc.time()
+time_start<-paste(eval(parse(text=(paste("Sys.time ()")))), sep="")
 
 
 #set working directory
@@ -427,7 +429,9 @@ habcum.init= cumsum(sort.ctab.init$sum)
 sumtab1.init<-cbind(sort.ctab.init, Cum.Sum=habcum.init)
 cumax<-max(sumtab1.init$Cum.Sum, na.rm=TRUE)
 sumtab1.init[nrow(sumtab1.init)+1, ] <- c(sumtab1.init$ID.grid[nrow(sumtab1.init)],100,sumtab1.init$ID.centro[nrow(sumtab1.init)],sumtab1.init$x[nrow(sumtab1.init)],sumtab1.init$y[nrow(sumtab1.init)],100,cumax)
-difa.init<-ggplot(sumtab1.init, aes(x =sumtab1.init$teci, y =sumtab1.init$Cum.Sum, xend=100, yend=100)) + geom_area(position='')+ labs(x = "Sorted TECI value (%)", y='Focal area proportion (%)')
+difa.init<-ggplot(sumtab1.init, aes(x =sumtab1.init$teci, y =sumtab1.init$Cum.Sum, xend=100, yend=100)) + 
+  geom_area(position='') + ggtitle(year1) +
+  labs(x = "Sorted TECI value (%)", y='Focal area proportion (%)')
 
 #Calculate area under the curve
 AUC.init = round((trapz(na.omit(sumtab1.init$teci),sumtab1.init$Cum.Sum))/100,digits=2)
@@ -466,7 +470,9 @@ habcum.final= cumsum(sort.ctab.final$sum)
 sumtab1.final<-cbind(sort.ctab.final, Cum.Sum=habcum.final)
 cumax<-max(sumtab1.final$Cum.Sum, na.rm=TRUE)
 sumtab1.final[nrow(sumtab1.final)+1, ] <- c(sumtab1.final$ID.grid[nrow(sumtab1.final)],100,sumtab1.final$ID.centro[nrow(sumtab1.final)],sumtab1.final$x[nrow(sumtab1.final)],sumtab1.final$y[nrow(sumtab1.final)],100,cumax)
-difa.final<-ggplot(sumtab1.final, aes(x =sumtab1.final$teci, y =sumtab1.final$Cum.Sum, xend=100, yend=100)) + geom_area(position='')+ labs(x = "Sorted TECI value (%)", y='Focal area proportion (%)')
+difa.final<-ggplot(sumtab1.final, aes(x =sumtab1.final$teci, y =sumtab1.final$Cum.Sum, xend=100, yend=100)) + 
+  geom_area(position='') + ggtitle(year2) +
+  labs(x = "Sorted TECI value (%)", y='Focal area proportion (%)')
 
 #Calculate area under the curve
 AUC.final = round((trapz(na.omit(sumtab1.final$teci),sumtab1.final$Cum.Sum))/100,digits=2)
@@ -752,6 +758,44 @@ if (grepl(".ldbase", as.character(ldabase.preques))){
   print("No previous Pre-QuES database loaded")
 }
 
+#Focal area loss
+plot(chk_loss)
+lookup_loss<-as.data.frame(cbind(0,NA))
+lookup_loss<-rbind(lookup_loss, cbind(1,2))
+foc.area.loss.reclass<- reclassify(chk_loss, lookup_loss)
+foc.area.change<-mosaic(foc.area.init, foc.area.loss.reclass, fun="max")
+
+plot(foc.area.change, legend=F, col=cbind("#E6E6E6","#006D2C", "#E41A1C"))
+legend("bottomright",legend = c("Non foc.area","intact foc.area", "Foc.area loss"), fill = cbind("#E6E6E6","#006D2C", "#E41A1C"))
+
+#Initial TECI moving window map plotting
+teci.color <- brewer.pal(9,"Oranges")
+background<-lu1/lu1
+plot(background, legend = FALSE, col = rev(gray(0.9)))
+plot(mwfile.init,add=T, col =teci.color)
+
+#Initial TECI moving window map plotting
+teci.color <- brewer.pal(9,"Oranges")
+plot(background, legend = FALSE, col = rev(gray(0.9)))
+plot(mwfile.final,add=T, col =teci.color)
+
+#HABITAT CHANGE ANALYSIS
+habitat.reclass<- read.table(habitat.reclass.lookup,header=TRUE, sep=",")
+habitat.reclass.mat<-as.matrix.data.frame(habitat.reclass[1:nrow(habitat.reclass),1:3], byrow=TRUE)
+habitat.rec.init<-reclassify(mwfile.init, habitat.reclass.mat, right=NA)
+habitat.rec.final<-reclassify(mwfile.final, habitat.reclass.mat, right=NA)
+
+habitat.rec.init.freq<-as.data.frame(freq(habitat.rec.init))
+colnames(habitat.rec.init.freq)<-c('ID','AREA.INITIAL')
+habitat.rec.init.freq$AREA.INITIAL<-habitat.rec.init.freq$AREA.INITIAL*Spat_res
+habitat.rec.final.freq<-as.data.frame(freq(habitat.rec.final))
+colnames(habitat.rec.final.freq)<-c('ID','AREA.FINAL')
+habitat.rec.final.freq$AREA.FINAL<-habitat.rec.final.freq$AREA.FINAL*Spat_res
+
+lookup_habitat<-habitat.reclass[1:nrow(habitat.reclass),3:4]
+habitat.change<-merge(lookup_habitat, habitat.rec.init.freq, by="ID")
+habitat.change<-merge(habitat.change, habitat.rec.final.freq, by="ID")
+
 
 #Create Map for report
 myColors1 <- brewer.pal(9,"Set1")
@@ -765,8 +809,6 @@ myColors8 <- "#000000"
 myColors9 <- brewer.pal(12, "Set3")
 
 myColors  <-c(myColors7,myColors1, myColors2, myColors3, myColors4, myColors5, myColors6)
-
-
 
 #Landuse 1 map
 area_lc1<-as.data.frame(freq(lu1))
@@ -803,9 +845,7 @@ plot.LU2<-gplot(lu2, maxpixels=100000) + geom_raster(aes(fill=as.factor(value)))
          legend.key.height = unit(0.25, "cm"),
          legend.key.width = unit(0.25, "cm"))
 
-
 myColors  <-c(myColors5,myColors1, myColors2, myColors3, myColors4, myColors7, myColors6)
-
 
 #zone map
 area_zone<-lookup_z
@@ -823,47 +863,140 @@ plot.Z<-gplot(zone, maxpixels=100000) + geom_raster(aes(fill=as.factor(value))) 
          legend.key.height = unit(0.25, "cm"),
          legend.key.width = unit(0.25, "cm"))
 
+#Focal Area Change
+ID<-as.data.frame(levels(ratify(foc.area.change)))
+Label<-c("Non Focal Area", "Intact Focal Area", "Focal Area Loss")
+FAC<-as.data.frame(cbind(ID, Label))
+myColors.FAC <- c("#FFCC66", "#003300","#FF0000")
+ColScale.FAC<-scale_fill_manual(name="Area Class", breaks=FAC$ID, labels=FAC$Label, values=myColors.FAC)
+plot.FAC<-gplot(foc.area.change, maxpixels=100000) + geom_raster(aes(fill=as.factor(value))) +
+  coord_equal() + ColScale.FAC +
+  theme(plot.title = element_text(lineheight= 5, face="bold")) +
+  theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
+         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+         legend.title = element_text(size=8),
+         legend.text = element_text(size = 6),
+         legend.key.height = unit(0.25, "cm"),
+         legend.key.width = unit(0.25, "cm"))
+
+#====Habitat extent Map t1====
+#plot.background<-gplot(background, maxpixels=100000) + geom_raster(aes(fill=as.factor(value)))
+plot.mw.init<-gplot(mwfile.init, maxpixels=100000) + geom_raster(aes(fill=value)) + 
+  coord_equal() + scale_fill_gradient(low = "#FFCC66", high="#003300", guide="colourbar") +
+  theme(plot.title = element_text(lineheight= 5, face="bold")) +
+  theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
+         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+         legend.title = element_text(size=8),
+         legend.text = element_text(size = 8),
+         legend.key.height = unit(0.375, "cm"),
+         legend.key.width = unit(0.375, "cm"))
+
+#====Habitat extent Map t2====
+plot.mw.fin<-gplot(mwfile.final, maxpixels=100000) + geom_raster(aes(fill=value)) +
+  coord_equal() + scale_fill_gradient(low = "#FFCC66", high="#003300", guide="colourbar") +
+  theme(plot.title = element_text(lineheight= 5, face="bold")) +
+  theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
+         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+         legend.title = element_text(size=8),
+         legend.text = element_text(size = 8),
+         legend.key.height = unit(0.375, "cm"),
+         legend.key.width = unit(0.375, "cm"))
+
 rm(myColors8, myColors7,myColors1, myColors2, myColors3, myColors4, myColors5, myColors6, myColors9)
 
+#====Create RTF Report File====
+title<-"\\b\\fs32 LUMENS-QUES Project Report\\b0\\fs20"
+sub_title<-"\\b\\fs28 Sub-modules: Biodiversity Analysis\\b0\\fs20"
+test<-as.character(Sys.Date())
+date<-paste("Date : ", test, sep="")
+time_start<-paste("Processing started : ", time_start, sep="")
+time_end<-paste("Processing ended : ", eval(parse(text=(paste("Sys.time ()")))), sep="")
+line<-paste("------------------------------------------------------------------------------------------------------------------------------------------------")
+area_name_rep<-paste("\\b", "\\fs20", prqs.location, "\\b0","\\fs20")
+I_O_period_1_rep<-paste("\\b","\\fs20", year1)
+I_O_period_2_rep<-paste("\\b","\\fs20", year2)
+chapter1<-"\\b\\fs24 DATA INPUT \\b0\\fs20"
+chapter2<-"\\b\\fs24 ANALYSIS AT LANDSCAPE LEVEL \\b0\\fs20"
+chapter3<-"\\b\\fs24 ANALYSIS AT PLANNING UNIT LEVEL \\b0\\fs20"
+rtffile <- RTF("LUMENS_QUES-B_report.lpr", font.size=9)
+addParagraph(rtffile, title)
+addParagraph(rtffile, sub_title)
+addNewLine(rtffile)
+addParagraph(rtffile, line)
+addParagraph(rtffile, date)
+addParagraph(rtffile, time_start)
+addParagraph(rtffile, time_end)
+addParagraph(rtffile, line)
+addNewLine(rtffile)
+addParagraph(rtffile, chapter1)
+addNewLine(rtffile)
 
-#Focal area loss
-plot(chk_loss)
-lookup_loss<-as.data.frame(cbind(0,NA))
-lookup_loss<-rbind(lookup_loss, cbind(1,2))
-foc.area.loss.reclass<- reclassify(chk_loss, lookup_loss)
-foc.area.change<-mosaic(foc.area.init, foc.area.loss.reclass, fun="max")
+text <- paste("\\b \\fs20 Land Use Map of \\b0 \\fs20 ", area_name_rep, "\\b \\fs20 tahun \\b0 \\fs20 ", I_O_period_1_rep, sep="")
+addParagraph(rtffile, text)
+addNewLine(rtffile, n=1)
+addPlot.RTF(rtffile, plot.fun=plot, width=6.4, height=4, res=150, plot.LU1 )
+#rm(plot.LU1)
+text <- paste("\\b \\fs20 Land Use Map of \\b0 \\fs20 ", area_name_rep, "\\b \\fs20 tahun \\b0 \\fs20 ", I_O_period_2_rep, sep="")
+addParagraph(rtffile, text)
+addNewLine(rtffile, n=1)
+addPlot.RTF(rtffile, plot.fun=plot, width=6.7, height=4, res=150, plot.LU2 )
+#rm(plot.LU2)
+text <- paste("\\b \\fs20 Zone Map of \\b0 \\fs20 ", area_name_rep, sep="")
+addParagraph(rtffile, text)
+addNewLine(rtffile, n=1)
+addPlot.RTF(rtffile, plot.fun=plot, width=6.7, height=4, res=150, plot.Z )
+#rm(plot.Z)
+addNewLine(rtffile, n=1)
+addNewLine(rtffile, n=1)
+addNewLine(rtffile, n=1)
+addNewLine(rtffile, n=1)
+addParagraph(rtffile, chapter2)
+addNewLine(rtffile)
+text <- paste("\\b \\fs20 Focal Area Change Map of \\b0 \\fs20 ", area_name_rep, "\\b \\fs20 tahun \\b0 \\fs20 ", I_O_period_1_rep, "\\b \\fs20 - \\b0 \\fs20 ", I_O_period_2_rep,  sep="")
+addParagraph(rtffile, text)
+addPlot.RTF(rtffile, plot.fun=plot, width=6.7, height=4, res=150, plot.FAC )
+addNewLine(rtffile, n=1)
+addTable(rtffile, foc.area.loss.att)
+addParagraph(rtffile, "\\b \\fs20 *Area in Hectares Unit ; Proportion in Percentage (%) \\b0 \\fs20 ")
+addNewLine(rtffile, n=1)
+text <- paste("\\b \\fs20 Habitat extent in \\b0 \\fs20 ",area_name_rep, I_O_period_1_rep,  sep="")
+addParagraph(rtffile, text)
+addPlot.RTF(rtffile, plot.fun=plot, width=6.7, height=4, res=150, plot.mw.init )
+addNewLine(rtffile, n=1)
+text <- paste("\\b \\fs20 Habitat extent in \\b0 \\fs20 ",area_name_rep, I_O_period_2_rep,  sep="")
+addParagraph(rtffile, text)
+addPlot.RTF(rtffile, plot.fun=plot, width=6.7, height=4, res=150, plot.mw.fin )
+addNewLine(rtffile, n=1)
+text <- paste("\\b \\fs20 Degree of Integration of Focal Area (DIFA) \\b0 \\fs20 ")
+addParagraph(rtffile, text)
+addPlot.RTF(rtffile, plot.fun=print, width=6.7, height=3, res=150, grid.arrange(difa.init, difa.final, ncol=2))
+addNewLine(rtffile, n=1)
+text <- paste("\\b \\fs20 Area Under Curve: \\b0 \\fs20 ")
+addParagraph(rtffile, text)
+text <- paste(I_O_period_1_rep, " : ", AUC.init, "%", "          ;    " ,I_O_period_2_rep, " : ", AUC.final, "%", sep=" ")
+addParagraph(rtffile, text)
+addNewLine(rtffile, n=1)
+text <- paste("\\b \\fs20 Focal area class metrics \\b0 \\fs20 ")
+addParagraph(rtffile, text)
+addTable(rtffile, foc.area.stats)
+addNewLine(rtffile, n=1)
+addParagraph(rtffile, chapter3)
+addNewLine(rtffile)
+text <- paste("\\b \\fs20 Habitat loss and degradation in \\b0 \\fs20 ",area_name_rep, I_O_period_1_rep, "\\b \\fs20 - \\b0 \\fs20 ", I_O_period_2_rep,  sep="")
+addParagraph(rtffile, text)
+addTable(rtffile, zstat.habitat.loss.degradation)
+addParagraph(rtffile, "\\b \\fs20 *max, min, mean, and sd are total edge contrast index value representing habitat loss and degradation degree \\b0 \\fs20 ")
+addParagraph(rtffile, "\\b \\fs20 *foc.area or total focal area in is Hectare unit \\b0 \\fs20 ")
+addNewLine(rtffile, n=1)
+text <- paste("\\b \\fs20 Habitat gain and recovery in \\b0 \\fs20 ",area_name_rep, I_O_period_1_rep, "\\b \\fs20 - \\b0 \\fs20 ", I_O_period_2_rep,  sep="")
+addParagraph(rtffile, text)
+addTable(rtffile, zstat.habitat.gain.recovery)
+addParagraph(rtffile, "\\b \\fs20 *max, min, mean, and sd are total edge contrast index value representing habitat gain and recovery degree \\b0 \\fs20 ")
+addParagraph(rtffile, "\\b \\fs20 *foc.area or total focal area is in Hectare unit \\b0 \\fs20 ")
+addNewLine(rtffile, n=1)
+#rm(plot.C1)  
+done(rtffile)
 
-plot(foc.area.change, legend=F, col=cbind("#E6E6E6","#006D2C", "#E41A1C"))
-legend("bottomright",legend = c("Non foc.area","intact foc.area", "Foc.area loss"), fill = cbind("#E6E6E6","#006D2C", "#E41A1C"))
-
-#Initial TECI moving window map plotting
-teci.color <- brewer.pal(9,"Oranges")
-background<-lu1/lu1
-plot(background, legend = FALSE, col = rev(gray(0.9)))
-plot(mwfile.init,add=T, col =teci.color)
-
-#Initial TECI moving window map plotting
-teci.color <- brewer.pal(9,"Oranges")
-plot(background, legend = FALSE, col = rev(gray(0.9)))
-plot(mwfile.final,add=T, col =teci.color)
-
-
-#HABITAT CHANGE ANALYSIS
-habitat.reclass<- read.table(habitat.reclass.lookup,header=TRUE, sep=",")
-habitat.reclass.mat<-as.matrix.data.frame(habitat.reclass[1:nrow(habitat.reclass),1:3], byrow=TRUE)
-habitat.rec.init<-reclassify(mwfile.init, habitat.reclass.mat, right=NA)
-habitat.rec.final<-reclassify(mwfile.final, habitat.reclass.mat, right=NA)
-
-habitat.rec.init.freq<-as.data.frame(freq(habitat.rec.init))
-colnames(habitat.rec.init.freq)<-c('ID','AREA.INITIAL')
-habitat.rec.init.freq$AREA.INITIAL<-habitat.rec.init.freq$AREA.INITIAL*Spat_res
-habitat.rec.final.freq<-as.data.frame(freq(habitat.rec.final))
-colnames(habitat.rec.final.freq)<-c('ID','AREA.FINAL')
-habitat.rec.final.freq$AREA.FINAL<-habitat.rec.final.freq$AREA.FINAL*Spat_res
-
-lookup_habitat<-habitat.reclass[1:nrow(habitat.reclass),3:4]
-habitat.change<-merge(lookup_habitat, habitat.rec.init.freq, by="ID")
-habitat.change<-merge(habitat.change, habitat.rec.final.freq, by="ID")
 
 #if (as.character(habitat.rec.init@crs)==as.character(zone@crs)){
 #  print("Final land use/cover map has the same projection")
@@ -880,6 +1013,3 @@ habitat.change<-merge(habitat.change, habitat.rec.final.freq, by="ID")
 
 #zstat.habitat.rec.init<-zonal(habitat.rec.init,zone, fun='sum')
 #zstat.habitat.rec.final<-zonal(habitat.rec.final,zone, fun='sum')
-
-time.elapsed<-proc.time() - time_start
-time.elapsed
