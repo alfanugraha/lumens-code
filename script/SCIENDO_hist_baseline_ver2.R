@@ -3,7 +3,7 @@
 ##carbonData=file
 ##period1=number 2005
 ##period2=number 2010
-##iteration=number 5 
+##iteration=number 5
 ##SCIENDO_LUWES=output table
 ##SCIENDO_LUWES_summary=output table
 ##lutm_z=output table
@@ -24,7 +24,9 @@ library(hexbin)
 library(grid)
 library(ggplot2)
 library(foreign)
+library(rtf)
 
+time_start<-paste(eval(parse(text=(paste("Sys.time ()")))), sep="")
 
 #====2_set_working_directory====
 setwd(workingDirectory)
@@ -33,7 +35,7 @@ setwd(workingDirectory)
 LUTMDatabase <- read.dbf(carbonData)
 period <- period2-period1
 total <- sum(LUTMDatabase$COUNT)
-
+ 
 LUTMDatabaseMelt <- melt(data = LUTMDatabase, id.vars=c('ID_LC1','ID_LC2'), measure.vars=c('COUNT'))
 
 areaLandCover1 <- dcast(data = LUTMDatabaseMelt, formula = ID_LC1 ~ ., fun.aggregate = sum)
@@ -189,16 +191,78 @@ LUTMZones$Z_AREA<-LUTMZones$COUNT1_2<-LUTMZones$LC_t1.y<-LUTMZones$LUZONE<-NULL
 #baseline<-barplot(subdat_l)
 
 #conduct analysis on the dataset
+SCIENDO_LUWES_summary[,2:ncol(SCIENDO_LUWES_summary)]<-round(SCIENDO_LUWES_summary[,2:ncol(SCIENDO_LUWES_summary)],digits=2)
 SL_overall<-SCIENDO_LUWES_summary
 SL_analysis<-SCIENDO_LUWES
 SL_overall.melt <- melt(data = SL_overall)
 SL_overall.melt.cast <- dcast(data = SL_overall.melt, formula = Parameters ~ variable, fun.aggregate = sum, subset = .(Parameters=="Cumulative emission (CO2 eq/(ha.yr))"))
 SL_overall_data<- melt(data = SL_overall.melt.cast)
 SL_overall_data<-SL_overall_data[-c(1),]
-plot1<-ggplot(SL_overall_data,aes(variable,value,fill=Parameters))+geom_bar(stat="identity",position="dodge")+theme(axis.text.x= element_text(angle=0,hjust=1))+ scale_fill_discrete(name="Emission (CO2eq)")+theme(legend.position="bottom")
-SL_analysis.melt <- melt(data = SL_analysis, id.vars=c('Z_NAME'), measure.vars=c('EM0','EM1','EM2','EM3','EM4','EM5'))
-plot2<-ggplot(SL_analysis.melt,aes(variable,value,fill=Z_NAME))+geom_bar(stat="identity",position="dodge")+theme(axis.text.x= element_text(angle=0,hjust=1))+ scale_fill_discrete(name="Emission (CO2eq)")
-em_by_zone <- dcast(data = SL_analysis.melt, formula = Z_NAME ~ variable, fun.aggregate = sum)
+
+t_1<-period2
+t_2<-t_1+period
+Period.db<-as.data.frame(NULL)
+Periode<-as.data.frame(NULL)
+for ( i in 1:nrow(SL_overall_data)){
+  period.int<-paste(t_1,"-",t_2, sep="")
+  Period.db<-c(Period.db,period.int)
+  t_1<-t_1+period
+  t_2<-t_1+period
+}
+Period.db<-as.character(Period.db)
+t_1<-period1
+t_2<-t_1+period
+for ( i in 1:(nrow(SL_overall_data)+1)){
+  period.int<-paste(t_1,"-",t_2, sep="")
+  Periode<-c(Periode,period.int)
+  t_1<-t_1+period
+  t_2<-t_1+period
+}
+Periode<-as.character(Periode)
+
+m.var<-'EM0'
+for(i in 1:iteration){
+  var<-paste('EM',i,sep="")
+  m.var<-c(m.var,var)
+}
+
+SL_analysis.melt <- melt(data = SL_analysis, id.vars=c('Z_NAME'), measure.vars=m.var)
+em_by_zone<-dcast(data = SL_analysis.melt, formula = Z_NAME ~ variable, fun.aggregate = sum)
+em_by_zone$Z_CODE<-toupper(abbreviate(em_by_zone$Z_NAME))
+
+zcol<-ncol(em_by_zone)
+sort.order<-as.numeric(c(1,zcol))
+for(i in 1:(zcol-2)){
+  sort<-i+1
+  sort.order<-c(sort.order, sort)
+}
+
+em_by_zone<-em_by_zone[c(sort.order)]
+em_by_zone[,3:8]<-round(em_by_zone[,3:8],digits=2)
+
+#Cumulative emission
+cum_em<-em_by_zone
+for (i in 1:(zcol-3)){
+  cum_em[,i+3]<-rowSums(em_by_zone[,(3):(i+3)])
+}
+cum_em[,3:ncol(cum_em)]<-round(cum_em[,3:ncol(cum_em)],digits=2)
+cum_em.melt<-melt(data = cum_em, id.vars=c('Z_NAME','Z_CODE'), measure.vars=m.var)
+
+plot1<-ggplot(SL_overall_data,aes(variable,value,group=1,fill=Parameters))+ geom_line(colour="red") + 
+  geom_point(colour="red", size=4, shape=21, fill="white") +
+  geom_text(data=SL_overall_data, aes(x=variable, y=value, label=round(value, 1)),size=3, hjust=1.5,vjust=-0.5) +
+  scale_x_discrete(breaks=SL_overall_data$variable ,labels=Period.db) +
+  xlab('Year') +  ylab('Cum.CO2eq/ha.yr') + 
+  theme( legend.title = element_text(size=8),legend.text = element_text(size = 8))
+plot2<-ggplot(cum_em.melt,aes(Z_NAME,value,fill=variable))+geom_bar(stat="identity",position="dodge")+
+  xlab('Zone Code') +  ylab('Cum.CO2eq/ha.yr') + scale_x_discrete(breaks=SL_analysis.melt$Z_NAME ,labels=em_by_zone$Z_CODE) +
+  theme(axis.text.x= element_text(angle=0,hjust=1))+ scale_fill_discrete(name="Cumulative \nEmission (CO2eq)", labels=Periode)
+plot3<-ggplot(cum_em.melt,aes(variable,value,fill=Z_CODE))+ geom_line(data=cum_em.melt, aes(x=variable, y=value, group=Z_CODE, fill=Z_CODE, colour=Z_CODE), stat="identity") + 
+  geom_point(data=cum_em.melt,aes(colour=Z_CODE), size=3) +
+  scale_x_discrete(breaks=unique(cum_em.melt$variable) ,labels=Periode) +
+  xlab('Year') +  ylab('Cum.CO2eq/ha.yr') + 
+  theme( legend.title = element_text(size=8),legend.text = element_text(size = 8))
+
 
 #write output to file
 write.dbf(SCIENDO_LUWES,"SCIENDO-LUWES_database.dbf")
@@ -209,43 +273,38 @@ write.dbf(LUTMOverall,"SCIENDO-LUWES_overall_lutm.dbf")
 write.dbf(TPMatrix,"SCIENDO-LUWES_overall_tpm_matrix.dbf")
 write.dbf(LUTMZones,"lutm_z.dbf")
 
-reports<-paste("
-Land Use Planning for Multiple Environmental Services
-========================================================
-***
-
-# Lembar hasil analisis SCIENDO-Scenario Development and Simulation:
-# Prediksi emisi di masa yang akan datang berdasarkan berbagai skenario
-
-***
-
-***
-# Predicted emission
-```{r fig.width=10, fig.height=9, echo=FALSE}
-plot(plot1)
-```
-***
-# Summary of SCIENDO-LUWES Result
-```{r fig.width=10, fig.height=9, echo=FALSE}
-pandoc.table(SCIENDO_LUWES_summary)
-
-```
-***
-
-# Predicted emission by zone
-```{r fig.width=10, fig.height=9, echo=FALSE}
-plot(plot2)
-```
-***
-# Summary of SCIENDO-LUWES Result by planning unit
-```{r fig.width=10, fig.height=9, echo=FALSE}
-pandoc.table(em_by_zone)
-
-```
-***
-")
-
-
-#WRITE REPORT
-write(reports,file="reporthtml.Rmd")
-knit2html("reporthtml.Rmd", options=c("use_xhml"))
+## WRITE REPORT
+title<-"\\b\\fs32 LUMENS-SCIENDO Project Report\\b0\\fs20"
+sub_title<-"\\b\\fs28 Sub-modules : Projection on Historical Baseline \\b0\\fs20"
+date<-paste("Date : ", date, sep="")
+time_start<-paste("Processing started : ", time_start, sep="")
+time_end<-paste("Processing ended : ", eval(parse(text=(paste("Sys.time ()")))), sep="")
+line<-paste("------------------------------------------------------------------------------------------------------------------------------------------------")
+I_O_period_1_rep<-paste("\\b","\\fs20", period1)
+I_O_period_2_rep<-paste("\\b","\\fs20", period2)
+rtffile <- RTF("LUMENS_SCIENDO-PHB_report.lpr", font.size=9)
+addParagraph(rtffile, title)
+addParagraph(rtffile, sub_title)
+addNewLine(rtffile)
+addParagraph(rtffile, line)
+addParagraph(rtffile, date)
+addParagraph(rtffile, time_start)
+addParagraph(rtffile, time_end)
+addParagraph(rtffile, line)
+addNewLine(rtffile)
+addPlot(rtffile,plot.fun=print, width=6.7,height=3,res=300, plot1)
+addParagraph(rtffile, paste("\\b \\fs20 Gambar 1.Predicted Emission\\b0 \\fs20 "))
+addNewLine(rtffile)
+addParagraph(rtffile, paste("\\b \\fs20 Table 1. Summary of SCIENDO-LUWES Result \\b0 \\fs20"))
+addTable(rtffile,SCIENDO_LUWES_summary)
+addNewLine(rtffile)
+addPlot(rtffile,plot.fun=print, width=6.7,height=3,res=300, plot2)
+addParagraph(rtffile, paste("\\b \\fs20 Gambar 2.Predicted Cumulative Emission by Zone\\b0 \\fs20 "))
+addNewLine(rtffile)
+addPlot(rtffile,plot.fun=print, width=6.7,height=3,res=300, plot3)
+addParagraph(rtffile, paste("\\b \\fs20 Gambar 3.Predicted Cumulative Emission \\b0 \\fs20 "))
+addNewLine(rtffile)
+addParagraph(rtffile, paste("\\b \\fs20 Table 2. Summary of SCIENDO-LUWES Result by Planning Unit \\b0 \\fs20"))
+addTable(rtffile,cum_em)
+addNewLine(rtffile)
+done(rtffile)
