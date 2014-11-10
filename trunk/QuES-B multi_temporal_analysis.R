@@ -47,40 +47,40 @@ time_start<-paste(eval(parse(text=(paste("Sys.time ()")))), sep="")
 
 
 #set working directory
-Wdir<-("C:/QUES_B_DJB/Merangin_2005")
+Wdir<-("R:/Work/QuES_B_multiple_tseries_testing_Merangin/")
 setwd(Wdir)
 outpath<-paste(getwd())
 
 #time series 1 requirements
-lu1<-raster("C:/QUES_B_DJB/Data_QUESB/Merangin/raster/lc_2000_Mrg1.tif")
-lu1_path<-paste("C:/QUES_B_DJB/Data_QUESB/Merangin/raster/lc_2000_Mrg1.ti")
+lu1<-raster("R:/Work/QuES_B_multiple_tseries_testing_Merangin/raster/lc_2000_Mrg1.tif")
+lu1_path<-paste("R:/Work/QuES_B_multiple_tseries_testing_Merangin/raster/lc_2000_Mrg1.ti")
 year1<-2000
 
 #time series 2 requirements
-lu2<-raster("C:/QUES_B_DJB/Data_QUESB/Merangin/raster/lc_2005_Mrg1.tif")
-lu2_path<-paste("C:/QUES_B_DJB/Data_QUESB/Merangin/raster/lc_2005_Mrg1.tif")
+lu2<-raster("R:/Work/QuES_B_multiple_tseries_testing_Merangin/raster/lc_2005_Mrg1.tif")
+lu2_path<-paste("R:/Work/QuES_B_multiple_tseries_testing_Merangin/raster/lc_2005_Mrg1.tif")
 year2<-2005
 
 #zone map requirements
-zone<-raster("C:/QUES_B_DJB/Data_QUESB/Merangin/raster/Zona_Merangin.tif")
-zone_lookup<-"C:/QUES_B_DJB/Data_QUESB/Merangin/Tabel_zona_Merangin.csv"
+zone<-raster("R:/Work/QuES_B_multiple_tseries_testing_Merangin/raster/Zona_Merangin.tif")
+zone_lookup<-"R:/Work/QuES_B_multiple_tseries_testing_Merangin/Tabel_zona_Merangin.csv"
 
 #fragstats requirements
 gridres<-10000
 windowsize<-1000
 window.shape<-1; #0= square, 1=circle
 raster.nodata<-0
-classdesc<-paste("C:/QUES_B_DJB/Data_QUESB/Merangin/description_merangin.csv")
-edgecon<-paste("C:/QUES_B_DJB/Data_QUESB/Merangin/contrast_merangin.csv")
+classdesc<-paste("R:/Work/QuES_B_multiple_tseries_testing_Merangin/description_merangin.csv")
+edgecon<-paste("R:/Work/QuES_B_multiple_tseries_testing_Merangin/contrast_merangin.csv")
 
 
 #PREQUES database:
-ldabase.preques<-"C:/QUES_B_DJB/preques_merangin_2000_2005/PreQuES_database_Merangin_2000_2005.ldbase"
+ldabase.preques<-"R:/Work/QuES_B_multiple_tseries_testing_Merangin/PreQuES_database_Merangin_2000_2005.ldbase"
 #ldabase.preques<-''
 
 #project properties
 location<-('Merangin')
-habitat.reclass.lookup<-paste("C:/QUES_B_DJB/Data_QUESB/Merangin/habitat_class.csv")
+habitat.reclass.lookup<-paste("R:/Work/QuES_B_multiple_tseries_testing_Merangin/habitat_class.csv")
 
 ref.map.id<-3 ;#options: 1 initial landuse as refrence, 2 final landuse as reference, 3 zone map as reference
 
@@ -880,7 +880,6 @@ plot.FAC<-gplot(foc.area.change, maxpixels=100000) + geom_raster(aes(fill=as.fac
          legend.key.width = unit(0.25, "cm"))
 
 #====Habitat extent Map t1====
-#plot.background<-gplot(background, maxpixels=100000) + geom_raster(aes(fill=as.factor(value)))
 plot.mw.init<-gplot(mwfile.init, maxpixels=100000) + geom_raster(aes(fill=value)) + 
   coord_equal() + scale_fill_gradient(low = "#FFCC66", high="#003300", guide="colourbar") +
   theme(plot.title = element_text(lineheight= 5, face="bold")) +
@@ -901,6 +900,71 @@ plot.mw.fin<-gplot(mwfile.final, maxpixels=100000) + geom_raster(aes(fill=value)
          legend.text = element_text(size = 8),
          legend.key.height = unit(0.375, "cm"),
          legend.key.width = unit(0.375, "cm"))
+
+#====Habitat loss and degradation====
+#plot.background<-gplot(background, maxpixels=100000) + geom_raster(aes(fill=as.factor(value)))
+maxval<-ceiling(maxValue(habitat.loss.degradation)/10)
+maxval<-maxval*10
+background[background==1]<-(-maxval)
+plot.hbt.loss<-merge(habitat.loss.degradation, background, overlap=TRUE)
+plot.HLD<-gplot(plot.hbt.loss, maxpixels=100000) + geom_raster(aes(fill=value)) + 
+  coord_equal() + scale_fill_gradient2(low="#999999",mid = "#FFCC66", high="#003300",limits=c(0,maxval), guide="colourbar") +
+  theme(plot.title = element_text(lineheight= 5, face="bold")) +
+  theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
+         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+         legend.title = element_text(size=8),
+         legend.text = element_text(size = 8),
+         legend.key.height = unit(0.375, "cm"),
+         legend.key.width = unit(0.375, "cm"))
+background[background==-maxval]<-1
+
+#====Habitat gain and recovery ====
+#plot.background<-gplot(background, maxpixels=100000) + geom_raster(aes(fill=as.factor(value)))
+maxval<-ceiling(maxValue(habitat.gain.recovery)/10)
+maxval<-maxval*10
+background[background==1]<-(-maxval)
+plot.hbt.gain<-merge(habitat.gain.recovery, background, overlap=TRUE)
+plot.HGR<-gplot(plot.hbt.gain, maxpixels=100000) + geom_raster(aes(fill=value)) + 
+  coord_equal() + scale_fill_gradient2(low="#999999",mid = "#FFCC66", high="#003300",limits=c(0,maxval), guide="colourbar") +
+  theme(plot.title = element_text(lineheight= 5, face="bold")) +
+  theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
+         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+         legend.title = element_text(size=8),
+         legend.text = element_text(size = 8),
+         legend.key.height = unit(0.375, "cm"),
+         legend.key.width = unit(0.375, "cm"))
+background[background==-maxval]<-1
+
+#====Habitat change Map t1====
+background[background==1]<-0
+plot.hb.init<-merge(habitat.rec.init, background, overlap=TRUE)
+ID.hbg.chg<-as.data.frame(levels(ratify(habitat.rec.init)))
+Label<-c("Most Suitable", "Suitable", "Least Suitable")
+HBC<-as.data.frame(cbind(ID.hbg.chg, Label))
+myColors.HBC <- c("#999999","#FFCC66", "#003300","#FF0000")
+ColScale.HBC<-scale_fill_manual(name="Area Class", breaks=HBC$ID, labels=HBC$Label, values=myColors.HBC)
+plot.hb.chg.init<-gplot(plot.hb.init, maxpixels=100000) + geom_raster(aes(fill=as.factor(value))) +
+  coord_equal() + ColScale.HBC +
+  theme(plot.title = element_text(lineheight= 5, face="bold")) +
+  theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
+         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+         legend.title = element_text(size=8),
+         legend.text = element_text(size = 6),
+         legend.key.height = unit(0.25, "cm"),
+         legend.key.width = unit(0.25, "cm"))
+
+#====Habitat change Map t2====
+plot.hb.final<-merge(habitat.rec.final, background, overlap=TRUE)
+plot.hb.chg.final<-gplot(plot.hb.final, maxpixels=100000) + geom_raster(aes(fill=as.factor(value))) +
+  coord_equal() + ColScale.HBC +
+  theme(plot.title = element_text(lineheight= 5, face="bold")) +
+  theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
+         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+         legend.title = element_text(size=8),
+         legend.text = element_text(size = 6),
+         legend.key.height = unit(0.25, "cm"),
+         legend.key.width = unit(0.25, "cm"))
+background[background==0]<-1
 
 rm(myColors8, myColors7,myColors1, myColors2, myColors3, myColors4, myColors5, myColors6, myColors9)
 
@@ -931,12 +995,12 @@ addNewLine(rtffile)
 addParagraph(rtffile, chapter1)
 addNewLine(rtffile)
 
-text <- paste("\\b \\fs20 Land Use Map of \\b0 \\fs20 ", area_name_rep, "\\b \\fs20 tahun \\b0 \\fs20 ", I_O_period_1_rep, sep="")
+text <- paste("\\b \\fs20 Land Use Map of \\b0 \\fs20 ", area_name_rep, I_O_period_1_rep, sep="")
 addParagraph(rtffile, text)
 addNewLine(rtffile, n=1)
 addPlot.RTF(rtffile, plot.fun=plot, width=6.4, height=4, res=150, plot.LU1 )
 #rm(plot.LU1)
-text <- paste("\\b \\fs20 Land Use Map of \\b0 \\fs20 ", area_name_rep, "\\b \\fs20 tahun \\b0 \\fs20 ", I_O_period_2_rep, sep="")
+text <- paste("\\b \\fs20 Land Use Map of \\b0 \\fs20 ", area_name_rep, I_O_period_2_rep, sep="")
 addParagraph(rtffile, text)
 addNewLine(rtffile, n=1)
 addPlot.RTF(rtffile, plot.fun=plot, width=6.7, height=4, res=150, plot.LU2 )
@@ -952,7 +1016,7 @@ addNewLine(rtffile, n=1)
 addNewLine(rtffile, n=1)
 addParagraph(rtffile, chapter2)
 addNewLine(rtffile)
-text <- paste("\\b \\fs20 Focal Area Change Map of \\b0 \\fs20 ", area_name_rep, "\\b \\fs20 tahun \\b0 \\fs20 ", I_O_period_1_rep, "\\b \\fs20 - \\b0 \\fs20 ", I_O_period_2_rep,  sep="")
+text <- paste("\\b \\fs20 Focal Area Change Map of \\b0 \\fs20 ", area_name_rep, I_O_period_1_rep, "\\b \\fs20 - \\b0 \\fs20 ", I_O_period_2_rep,  sep="")
 addParagraph(rtffile, text)
 addPlot.RTF(rtffile, plot.fun=plot, width=6.7, height=4, res=150, plot.FAC )
 addNewLine(rtffile, n=1)
@@ -967,6 +1031,12 @@ text <- paste("\\b \\fs20 Habitat extent in \\b0 \\fs20 ",area_name_rep, I_O_per
 addParagraph(rtffile, text)
 addPlot.RTF(rtffile, plot.fun=plot, width=6.7, height=4, res=150, plot.mw.fin )
 addNewLine(rtffile, n=1)
+text <- paste("\\b \\fs20 Habitat change in \\b0 \\fs20 ",area_name_rep, I_O_period_1_rep, "\\b \\fs20 - \\b0 \\fs20 ", I_O_period_2_rep,  sep="")
+addParagraph(rtffile, text)
+addPlot.RTF(rtffile, plot.fun=print, width=6.7, height=4, res=150, grid.arrange(plot.hb.chg.init, plot.hb.chg.final, ncol=2) )
+addNewLine(rtffile, n=1)
+addTable(rtffile, habitat.change)
+addNewLine(rtffile, n=1)
 text <- paste("\\b \\fs20 Degree of Integration of Focal Area (DIFA) \\b0 \\fs20 ")
 addParagraph(rtffile, text)
 addPlot.RTF(rtffile, plot.fun=print, width=6.7, height=3, res=150, grid.arrange(difa.init, difa.final, ncol=2))
@@ -978,18 +1048,32 @@ addParagraph(rtffile, text)
 addNewLine(rtffile, n=1)
 text <- paste("\\b \\fs20 Focal area class metrics \\b0 \\fs20 ")
 addParagraph(rtffile, text)
-addTable(rtffile, foc.area.stats)
+addTable(rtffile, foc.area.stats, row.names=TRUE)
+addNewLine(rtffile, n=1)
+text <- paste("\\b \\fs20 Habitat loss and degradation in \\b0 \\fs20 ",area_name_rep, I_O_period_1_rep, "\\b \\fs20 - \\b0 \\fs20 ", I_O_period_2_rep,  sep="")
+addParagraph(rtffile, text)
+addPlot.RTF(rtffile, plot.fun=print, width=6.7, height=3, res=150, plot.HLD)
+addNewLine(rtffile, n=1)
+text <- paste("\\b \\fs20 Top 10 corresponding LULC to habitat loss and degradation in \\b0 \\fs20 ",area_name_rep, I_O_period_1_rep, "\\b \\fs20 - \\b0 \\fs20 ", I_O_period_2_rep,  sep="")
+addParagraph(rtffile, text)
+addTable(rtffile, luchg.seg.10)
+addParagraph(rtffile, "\\b \\fs20 * area is in Hectare unit \\b0 \\fs20 ")
+addNewLine(rtffile, n=1)
+text <- paste("\\b \\fs20 Habitat gain and recovery in \\b0 \\fs20 ",area_name_rep, I_O_period_1_rep, "\\b \\fs20 - \\b0 \\fs20 ", I_O_period_2_rep,  sep="")
+addParagraph(rtffile, text)
+addPlot.RTF(rtffile, plot.fun=print, width=6.7, height=3, res=150, plot.HGR)
+addNewLine(rtffile, n=1)
+text <- paste("\\b \\fs20 Top 10 corresponding LULC to habitat gain and recovery in \\b0 \\fs20 ",area_name_rep, I_O_period_1_rep, "\\b \\fs20 - \\b0 \\fs20 ", I_O_period_2_rep,  sep="")
+addParagraph(rtffile, text)
+addTable(rtffile, luchg.int.10)
+addParagraph(rtffile, "\\b \\fs20 * area is in Hectare unit \\b0 \\fs20 ")
 addNewLine(rtffile, n=1)
 addParagraph(rtffile, chapter3)
 addNewLine(rtffile)
-text <- paste("\\b \\fs20 Habitat loss and degradation in \\b0 \\fs20 ",area_name_rep, I_O_period_1_rep, "\\b \\fs20 - \\b0 \\fs20 ", I_O_period_2_rep,  sep="")
-addParagraph(rtffile, text)
 addTable(rtffile, zstat.habitat.loss.degradation)
 addParagraph(rtffile, "\\b \\fs20 *max, min, mean, and sd are total edge contrast index value representing habitat loss and degradation degree \\b0 \\fs20 ")
 addParagraph(rtffile, "\\b \\fs20 *foc.area or total focal area in is Hectare unit \\b0 \\fs20 ")
 addNewLine(rtffile, n=1)
-text <- paste("\\b \\fs20 Habitat gain and recovery in \\b0 \\fs20 ",area_name_rep, I_O_period_1_rep, "\\b \\fs20 - \\b0 \\fs20 ", I_O_period_2_rep,  sep="")
-addParagraph(rtffile, text)
 addTable(rtffile, zstat.habitat.gain.recovery)
 addParagraph(rtffile, "\\b \\fs20 *max, min, mean, and sd are total edge contrast index value representing habitat gain and recovery degree \\b0 \\fs20 ")
 addParagraph(rtffile, "\\b \\fs20 *foc.area or total focal area is in Hectare unit \\b0 \\fs20 ")
