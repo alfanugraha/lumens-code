@@ -1,9 +1,9 @@
 ##[SCIENDO]=group
-##workingDirectory=folder
-##carbonData=file
-##period1=number 2005
-##period2=number 2010
-##iteration=number 5
+workingDirectory="R://Work/SCIENDO/SCIENDO"
+carbonData="QUES-C_database.dbf"
+period1=2005
+period2=2010
+iteration=5
 ##SCIENDO_LUWES=output table
 ##SCIENDO_LUWES_summary=output table
 ##lutm_z=output table
@@ -276,7 +276,7 @@ write.dbf(LUTMZones,"lutm_z.dbf")
 ## WRITE REPORT
 title<-"\\b\\fs32 LUMENS-SCIENDO Project Report\\b0\\fs20"
 sub_title<-"\\b\\fs28 Sub-modules : Projection on Historical Baseline \\b0\\fs20"
-date<-paste("Date : ", date, sep="")
+date<-paste("Date : ", as.character(Sys.Date()), sep="")
 time_start<-paste("Processing started : ", time_start, sep="")
 time_end<-paste("Processing ended : ", eval(parse(text=(paste("Sys.time ()")))), sep="")
 line<-paste("------------------------------------------------------------------------------------------------------------------------------------------------")
