@@ -85,14 +85,19 @@ if (as.character(landuse1@crs)==as.character(landuse2@crs)){
   landuse2<-spatial_sync_raster(landuse2, landuse1, method = "ngb")
 }
 
-
-#Extent handling and raster resolution zone map
+# Extent handling and raster resolution zone map
 if (as.character(landuse1@crs)==as.character(zone@crs)){
   print("Raster map time series 1 and 2 have the same projection")
   if (res(landuse1)[1]==res(zone)[1]){
-    print("Raster map time series 1 and 2 have the same extent")
+    print("Raster map time series 1 and 2 have the same resolution")
+    if (landuse1@extent==zone@extent){
+      print("Raster map time series 1 and 2 have the same extent")
+    } else {
+      print("Raster map time series 1 and 2 don't have the same extent, synchronising land-cover map...")
+      zone<-spatial_sync_raster(zone, landuse1, method = "ngb")
+    }
   } else{
-    print("Raster map time series 1 and 2 don't have the same extent, synchronising land-cover map...")
+    print("Raster map time series 1 and 2 don't have the same resolution, synchronising land-cover map...")
     zone<-spatial_sync_raster(zone, landuse1, method = "ngb")
   }
 } else{
