@@ -43,26 +43,27 @@ library(gridExtra)
 #outpath<-paste(Wdir)
 #gridres<-(grsize)
 
-time_start<-paste(eval(parse(text=(paste("Sys.time ()")))), sep="")
+time_start<-proc.time()
+#time_start<-paste(eval(parse(text=(paste("Sys.time ()")))), sep="")
 
 
 #set working directory
-Wdir<-("C:/QUES_B_DJB/Merangin_2005")
+Wdir<-("C:/QUES_B_DJB/ques_b_merangin_2000_2005/")
 setwd(Wdir)
 outpath<-paste(getwd())
 
 #time series 1 requirements
 lu1<-raster("C:/QUES_B_DJB/Data_QUESB/Merangin/raster/lc_2000_Mrg1.tif")
-lu1_path<-paste("C:/QUES_B_DJB/Data_QUESB/Merangin/raster/lc_2000_Mrg1.ti")
-year1<-2000
+lu1_path<-paste("C:/QUES_B_DJB/Data_QUESB/Merangin/raster/lc_2000_Mrg1.tif")
+period1<-2000
 
 #time series 2 requirements
 lu2<-raster("C:/QUES_B_DJB/Data_QUESB/Merangin/raster/lc_2005_Mrg1.tif")
 lu2_path<-paste("C:/QUES_B_DJB/Data_QUESB/Merangin/raster/lc_2005_Mrg1.tif")
-year2<-2005
+period2<-2005
 
 #zone map requirements
-zone<-raster("C:/QUES_B_DJB/Data_QUESB/Merangin/raster/Zona_Merangin.tif")
+zone<-raster("C:/QUES_B_DJB/Data_QUESB/Merangin/raster/zone_merangin_reclass.tif")
 zone_lookup<-"C:/QUES_B_DJB/Data_QUESB/Merangin/Tabel_zona_Merangin.csv"
 
 #fragstats requirements
@@ -84,6 +85,7 @@ habitat.reclass.lookup<-paste("C:/QUES_B_DJB/Data_QUESB/Merangin/habitat_class.c
 
 ref.map.id<-3 ;#options: 1 initial landuse as refrence, 2 final landuse as reference, 3 zone map as reference
 
+#options: 1 initial landuse as refrence, 2 final landuse as reference, 3 zone map as reference
 if (ref.map.id==1){
   print("Initial land use/cover map as reference")
   ref.map<-lu1
@@ -293,21 +295,9 @@ for (i in 1:3){
   }
 }
 
-#CHECK FRAGSTATS MODEL AVAILABILITY
-#if (file.exists("C:/Program Files (x86)/LUMENS//teciuf.fca")){
-#  fca<-shQuote("C:/Program Files (x86)/LUMENS//teciuf.fca")
-#} else if (file.exists("C:/Program Files/LUMENS//teciuf.fca")){
-#  fca<-shQuote("C:/Program Files (x86)/LUMENS//teciuf.fca")
-#} else{
-#  stop("Fragstats model file is not found, please make sure the file is located in your LUMENS folder in Program files")
-#}
-
-
 #connect to fragstats' .fca file
-if (file.exists("C:/Program Files (x86)/LUMENS//teciuf.fca")){
-  fca<-paste('C:/Program Files (x86)/LUMENS//teciuf.fca')
-} else if (file.exists("C:/Program Files/LUMENS//teciuf.fca")){
-  fca<-paste('C:/Program Files (x86)/LUMENS//teciuf.fca')
+if (file.exists(paste(Sys.getenv("R_USER"),'/LUMENS/teciuf.fca',sep=''))){
+  fca<-paste(Sys.getenv("R_USER"),'/LUMENS/teciuf.fca', sep='')
 } else{
   stop("Fragstats model file is not found, please make sure the file is located in your LUMENS folder in Program files")
 }
@@ -412,7 +402,7 @@ teci.dir.final<-paste(mwout2,"/",list.files(mwout2), sep='')
 
 #INITIAL TECI MW Handling
 tryCatch({
-  mwfile.init<-raster(teci.dir.init) 
+  mwfile.init<-raster(teci.dir.init)
 },error=function(e){cat("No moving window output file found, re-check your inputs :",conditionMessage(e), "\n")})
 
 NAvalue(mwfile.init)<-(999*-1)
@@ -432,9 +422,10 @@ sort.ctab.init <- sort.ctab.init[!(sort.ctab.init$sum==0),]
 habcum.init= cumsum(sort.ctab.init$sum)
 sumtab1.init<-cbind(sort.ctab.init, Cum.Sum=habcum.init)
 cumax<-max(sumtab1.init$Cum.Sum, na.rm=TRUE)
-sumtab1.init[nrow(sumtab1.init)+1, ] <- c(sumtab1.init$ID.grid[nrow(sumtab1.init)],100,sumtab1.init$ID.centro[nrow(sumtab1.init)],sumtab1.init$x[nrow(sumtab1.init)],sumtab1.init$y[nrow(sumtab1.init)],100,cumax)
-difa.init<-ggplot(sumtab1.init, aes(x =sumtab1.init$teci, y =sumtab1.init$Cum.Sum, xend=100, yend=100)) + 
-  geom_area(position='') + ggtitle(year1) +
+row.names(sumtab1.init)<-1:nrow(sumtab1.init)
+sumtab1.init[nrow(sumtab1.init)+1, ] <- c(sumtab1.init$ID.centro[nrow(sumtab1.init)], sumtab1.init$ID.grid[nrow(sumtab1.init)],100,sumtab1.init$x[nrow(sumtab1.init)],sumtab1.init$y[nrow(sumtab1.init)],100,cumax)
+difa.init<-ggplot(sumtab1.init, aes(x =sumtab1.init$teci, y =sumtab1.init$Cum.Sum, xend=100, yend=100)) +
+  geom_area(position='') + ggtitle(period1) +
   labs(x = "Sorted TECI value (%)", y='Cumulative Proportion of Focal Areas (%)')
 
 #Calculate area under the curve
@@ -446,8 +437,8 @@ colnames(sumtab2.init)<-c("ID.centroid","ID.grid","X.cor","Y.cor","Habitat Area 
 write.table(sumtab2.init, "QUES-B Summary calculation-initial.csv", row.names = FALSE, sep=",")
 
 
-file.teci.init<-paste('TECI_',location,'_',year1,'_NA',sep='')
-file.habitat.name.init<-paste('focal_area_',location,'_',year1, sep='')
+file.teci.init<-paste('TECI_',location,'_',period1,'_NA',sep='')
+file.habitat.name.init<-paste('focal_area_',location,'_',period1, sep='')
 writeRaster(mwfile.init, filename=file.teci.init, format="GTiff", overwrite=TRUE)
 writeRaster(foc.area.init, filename=file.habitat.name.init, format="GTiff", overwrite=TRUE)
 
@@ -473,10 +464,11 @@ sort.ctab.final <- sort.ctab.final[!(sort.ctab.final$sum==0),]
 habcum.final= cumsum(sort.ctab.final$sum)
 sumtab1.final<-cbind(sort.ctab.final, Cum.Sum=habcum.final)
 cumax<-max(sumtab1.final$Cum.Sum, na.rm=TRUE)
-sumtab1.final[nrow(sumtab1.final)+1, ] <- c(sumtab1.final$ID.grid[nrow(sumtab1.final)],100,sumtab1.final$ID.centro[nrow(sumtab1.final)],sumtab1.final$x[nrow(sumtab1.final)],sumtab1.final$y[nrow(sumtab1.final)],100,cumax)
-difa.final<-ggplot(sumtab1.final, aes(x =sumtab1.final$teci, y =sumtab1.final$Cum.Sum, xend=100, yend=100)) + 
-  geom_area(position='') + ggtitle(year2) +
-  labs(x = "Sorted TECI value (%)", y='Focal area proportion (%)')
+row.names(sumtab1.final)<-1:nrow(sumtab1.final)
+sumtab1.final[nrow(sumtab1.final)+1, ] <- c(sumtab1.final$ID.centro[nrow(sumtab1.final)], sumtab1.final$ID.grid[nrow(sumtab1.final)],100,sumtab1.final$x[nrow(sumtab1.final)],sumtab1.final$y[nrow(sumtab1.final)],100,cumax)
+difa.final<-ggplot(sumtab1.final, aes(x =sumtab1.final$teci, y =sumtab1.final$Cum.Sum, xend=100, yend=100)) +
+  geom_area(position='') + ggtitle(period2) +
+  labs(x = "Sorted TECI value (%)", y='Cumulative Proportion of Focal Areas (%)')
 
 #Calculate area under the curve
 AUC.final = round((trapz(na.omit(sumtab1.final$teci),sumtab1.final$Cum.Sum))/100,digits=2)
@@ -487,8 +479,8 @@ colnames(sumtab2.final)<-c("ID.centroid","ID.grid","X.cor","Y.cor","Habitat Area
 write.table(sumtab2.final, "QUES-B Summary calculation-final.csv", row.names = FALSE, sep=",")
 
 
-file.teci.final<-paste('TECI_',location,'_',year2,'_NA',sep='')
-file.habitat.name.final<-paste('focal_area_',location,'_',year2, sep='')
+file.teci.final<-paste('TECI_',location,'_',period2,'_NA',sep='')
+file.habitat.name.final<-paste('focal_area_',location,'_',period2, sep='')
 writeRaster(mwfile.final, filename=file.teci.final, format="GTiff", overwrite=TRUE)
 writeRaster(foc.area.final, filename=file.habitat.name.final, format="GTiff", overwrite=TRUE)
 
@@ -527,19 +519,19 @@ foc.area.stats.temp3<-(foc.area.stats[10:13,c('foc.area.stats.init','foc.area.st
 foc.area.stats<-rbind(foc.area.stats.temp1,total.edge,foc.area.stats.temp3)
 rm(foc.area.stats.temp1,total.edge,foc.area.stats.temp3)
 
-col.init<-paste('class.stats.',year1, sep='')
-colnames(foc.area.stats)<-c(paste('class.stats.',year1, sep=''),paste('class.stats.',year2, sep=''))
-foc.area.stats.filename<-paste("Focal_area_class_metrics",location,'_',year1,'_',year2,'.csv', sep='')
+col.init<-paste('class.stats.',period1, sep='')
+colnames(foc.area.stats)<-c(paste('class.stats.',period1, sep=''),paste('class.stats.',period2, sep=''))
+foc.area.stats.filename<-paste("Focal_area_class_metrics",location,'_',period1,'_',period2,'.csv', sep='')
 write.csv(foc.area.stats, foc.area.stats.filename, row.names=TRUE)
 
 #combine teci_zstat with planning unit name
 
 #QUES-B database
-dbase.quesb.name<-paste("QuESB_database_", location,'_',year1,'_',year2,'.ldbase', sep='')
-save(lu1_path,lu1,year1,lu2_path,lu2,year2,zone,zone_lookup,location,totarea,lookup_bh,polygrid,sumtab1.init,difa.init,AUC.init,foc.area.init,mwfile.init,zstat.init,foc.area.stats.init,sumtab1.final,difa.final,AUC.final,mwfile.final,zstat.final,foc.area.stats.final, file=dbase.quesb.name)
+dbase.quesb.name<-paste("QuESB_database_", location,'_',period1,'_',period2,'.ldbase', sep='')
+save(lu1_path,lu1,period1,lu2_path,lu2,period2,zone,zone_lookup,location,totarea,lookup_bh,polygrid,sumtab1.init,difa.init,AUC.init,foc.area.init,mwfile.init,zstat.init,foc.area.stats.init,sumtab1.final,difa.final,AUC.final,mwfile.final,zstat.final,foc.area.stats.final, file=dbase.quesb.name)
 #load(dbase.quesb.name)
 
-#MULTI-TEMPORAL ANALYSIS 
+#MULTI-TEMPORAL ANALYSIS
 
 #Focal area decrement and increment
 chk_loss<-foc.area.init>foc.area.final
@@ -603,7 +595,7 @@ if (maxValue(chk_loss)>0){
   foc.area.loss.att$Area<-foc.area.loss.att$Area*(res(foc.area.init)[1]*res(foc.area.init)[2]/10000)
   foc.area.loss.att<-arrange(foc.area.loss.att, -Proportion_of_loss)
   foc.area.loss.att$Proportion_of_loss<-round(foc.area.loss.att$Proportion_of_loss, digits=2)
-  foc.area.loss.att.filename<-paste("Focal_area_loss_source",location,'_',year1,'_',year2,'.dbf', sep='')
+  foc.area.loss.att.filename<-paste("Focal_area_loss_source_",location,'_',period1,'_',period2,'.dbf', sep='')
   write.dbf(foc.area.loss.att, foc.area.loss.att.filename)
 } else { print("No focal area loss found")}
 
@@ -620,7 +612,7 @@ if (maxValue(chk_gain)>0) {
   foc.area.gain.att$Area<-foc.area.gain.att$Area*(res(foc.area.init)[1]*res(foc.area.init)[2]/10000)
   foc.area.gain.att<-arrange(foc.area.gain.att, -Proportion_of_gain)
   foc.area.gain.att$Proportion_of_gain<-round(foc.area.gain.att$Proportion_of_gain, digits=2)
-  foc.area.gain.att.filename<-paste("Focal_area_gain_source",location,'_',year1,'_',year2,'.dbf', sep='')
+  foc.area.gain.att.filename<-paste("Focal_area_gain_source",location,'_',period1,'_',period2,'.dbf', sep='')
   write.dbf(foc.area.gain.att, foc.area.gain.att.filename)
 } else { print("No focal area gain found")}
 
@@ -638,7 +630,7 @@ zstat.foc.area$foc.area.change<-zstat.foc.area$foc.area.change*Spat_res
 zstat.foc.area<-merge(lookup_z,zstat.foc.area,by='ZONE')
 zstat.foc.area<-merge(zstat.foc.area,lookup_z.area,by='ZONE')
 zstat.foc.area$change.proportion<-round((zstat.foc.area$foc.area.change/zstat.foc.area$zone.area)*100, digits=2)
-zstat.foc.area<-arrange(zstat.foc.area, foc.area.change) 
+zstat.foc.area<-arrange(zstat.foc.area, foc.area.change)
 
 
 if (as.character(habitat.loss.NA@crs)==as.character(zone@crs)){
@@ -656,9 +648,9 @@ if (as.character(habitat.loss.NA@crs)==as.character(zone@crs)){
 
 
 #zonal stat for habitat recovery and degradation
+tryCatch({
 habitat.recovery.0<-reclassify(habitat.recovery, cbind(NA, 0))
 zstat.habitat.recovery<-ZonalStat(habitat.recovery.0, zone, FUN = "all")
-
 colnames(zstat.habitat.recovery)[1] ="ZONE"
 zstat.habitat.recovery<-merge(lookup_z, zstat.habitat.recovery, by="ZONE")
 zstat.habitat.recovery[4]<-NULL
@@ -673,7 +665,9 @@ zstat.habitat.recovery<-merge(zstat.habitat.recovery, zstat.foc.area.basic, by="
 zstat.habitat.recovery$norm.mean<-zstat.habitat.recovery$mean/abs(zstat.habitat.recovery$foc.area)
 zstat.habitat.recovery$norm.mean<-round(zstat.habitat.recovery$norm.mean, digits=3)
 zstat.habitat.recovery<-arrange(zstat.habitat.recovery, -norm.mean)
+},error=function(e){cat("Skipping zonal stats on habitat recovery:",conditionMessage(e), "\n")})
 
+tryCatch({
 habitat.degradation.0<-reclassify(habitat.degradation, cbind(NA, 0))
 zstat.habitat.degradation<-ZonalStat(habitat.degradation.0, zone, FUN = "all")
 colnames(zstat.habitat.degradation)[1] ="ZONE"
@@ -690,16 +684,17 @@ zstat.habitat.degradation<-merge(zstat.habitat.degradation, zstat.foc.area.basic
 zstat.habitat.degradation$norm.mean<-zstat.habitat.degradation$mean/abs(zstat.habitat.degradation$foc.area)
 zstat.habitat.degradation$norm.mean<-round(zstat.habitat.degradation$norm.mean, digits=3)
 zstat.habitat.degradation<-arrange(zstat.habitat.degradation, -norm.mean)
+},error=function(e){cat("Skipping zonal stats on habitat gain:",conditionMessage(e), "\n")})
 
 #write zonal stats table
 tryCatch({
-zstat.gain.recover.filename<-paste("Habitat_recovery_zonal_stat_",location,'_',year1,'_',year2,'.dbf', sep='')
-write.dbf(zstat.habitat.recovery, zstat.gain.recover.filename)
+  zstat.gain.recover.filename<-paste("Habitat_recovery_zonal_stat_",location,'_',period1,'_',period2,'.dbf', sep='')
+  write.dbf(zstat.habitat.recovery, zstat.gain.recover.filename)
 },error=function(e){cat("Skipping zonal stats table export process:",conditionMessage(e), "\n")})
 
 tryCatch({
-zstat.loss.degradation.filename<-paste("Habitat_degradation_zonal_stat_",location,'_',year1,'_',year2,'.dbf', sep='')
-write.dbf(zstat.habitat.degradation, zstat.loss.degradation.filename)
+  zstat.loss.degradation.filename<-paste("Habitat_degradation_zonal_stat_",location,'_',period1,'_',period2,'.dbf', sep='')
+  write.dbf(zstat.habitat.degradation, zstat.loss.degradation.filename)
 },error=function(e){cat("Skipping zonal stats table export process:",conditionMessage(e), "\n")})
 
 
@@ -711,6 +706,8 @@ if (grepl(".ldbase", as.character(ldabase.preques))){
   #load final database
   load(ldabase.preques)
   #rename initial variables
+  
+  tryCatch({
   prqs.proj.prop<-proj_prop
   prqgs.lucdb<-data_merge_sel
   prqs.ov.chg<-Ov_chg
@@ -720,6 +717,7 @@ if (grepl(".ldbase", as.character(ldabase.preques))){
   prqs.year.init<-period1
   prqs.year.final<-period2
   remove(proj_prop,data_merge_sel, Ov_chg, cross_temp.melt.dbf, luchg, luchg_att, period1, period2)
+  },error=function(e){cat("Pre-QUES database is not complete :",conditionMessage(e), "\n")})
   
   #identify contributing land use change to focal area degradation and loss
   habitat.degradation.bol<-habitat.degradation/habitat.degradation; #create boolean degradation map
@@ -744,7 +742,7 @@ if (grepl(".ldbase", as.character(ldabase.preques))){
   luchg.degradation.att<-as.data.frame(cbind(luchg.degradation.att[1],luchg.degradation.att[2],luchg.degradation.att[4],luchg.degradation.att[5],luchg.degradation.att[12],luchg.degradation.att[13], luchg.degradation.att[14]))
   luchg.degradation.att<-luchg.degradation.att[ order(-luchg.degradation.att[,2]), ]
   tryCatch({
-    luchg.degradation.db.filename<-paste("LUCHG_degradation_database",location,'_',year1,'_',year2,'.dbf', sep='')
+    luchg.degradation.db.filename<-paste("LUCHG_degradation_database",location,'_',period1,'_',period2,'.dbf', sep='')
     write.dbf(luchg.degradation.att, luchg.degradation.db.filename)
   },error=function(e){cat("Skipping database export process :",conditionMessage(e), "\n")})
   
@@ -760,7 +758,7 @@ if (grepl(".ldbase", as.character(ldabase.preques))){
     luchg.degradation.focal.area<-as.data.frame(cbind(luchg.degradation.focal.area[1],luchg.degradation.focal.area[2],luchg.degradation.focal.area[7]))
   },error=function(e){cat("Habitat degradation of focal area due to neighboring changes :",conditionMessage(e), "\n")})
   
-  #Habitat degradation due to LULCC in situ 
+  #Habitat degradation due to LULCC in situ
   tryCatch({
     luchg.degradation.10.with.change<-luchg.degradation.10[ which(as.character(luchg.degradation.10$ID_LC2)!=as.character(luchg.degradation.10$ID_LC1)),];#habitat degradation with landuse/landcover change
     luchg.degradation.10.with.change<-as.data.frame(cbind(luchg.degradation.10.with.change[1],luchg.degradation.10.with.change[2],luchg.degradation.10.with.change[7]))
@@ -800,7 +798,7 @@ if (grepl(".ldbase", as.character(ldabase.preques))){
     luchg.loss.att<-merge(lookup_lc,luchg.loss.att,by="ID")
     #luchg.loss.att<-as.data.frame(cbind(luchg.loss.att[1],luchg.loss.att[2],luchg.loss.att[4],luchg.loss.att[5],luchg.loss.att[12],luchg.loss.att[13], luchg.loss.att[14]))
     luchg.loss.att<-luchg.loss.att[ order(-luchg.loss.att[,3]), ]
-    luchg.loss.db.filename<-paste("LUCHG_loss_database",location,'_',year1,'_',year2,'.dbf', sep='')
+    luchg.loss.db.filename<-paste("LUCHG_loss_database",location,'_',period1,'_',period2,'.dbf', sep='')
     write.dbf(luchg.loss.att, luchg.loss.db.filename)
     #top 10 subsequent LULC related to habitat loss
     luchg.loss.10<-luchg.loss.att[1:10,]
@@ -843,7 +841,7 @@ if (grepl(".ldbase", as.character(ldabase.preques))){
   
   #write zonal stats table for habitat loss
   tryCatch({
-    zstat.loss.loss.filename<-paste("Habitat_loss_zonal_stat_",location,'_',year1,'_',year2,'.dbf', sep='')
+    zstat.loss.loss.filename<-paste("Habitat_loss_zonal_stat_",location,'_',period1,'_',period2,'.dbf', sep='')
     write.dbf(zstat.habitat.loss.NA, zstat.loss.loss.filename)
   },error=function(e){cat("write zonal stats table for habitat loss :",conditionMessage(e), "\n")})
   
@@ -873,7 +871,7 @@ if (grepl(".ldbase", as.character(ldabase.preques))){
   luchg.recovery.att<-as.data.frame(cbind(luchg.recovery.att[1],luchg.recovery.att[2],luchg.recovery.att[4],luchg.recovery.att[5],luchg.recovery.att[12],luchg.recovery.att[13], luchg.recovery.att[14]))
   luchg.recovery.att<-luchg.recovery.att[ order(-luchg.recovery.att[,2]), ]
   tryCatch({
-    luchg.recovery.db.filename<-paste("LUCHG_recovery_database",location,'_',year1,'_',year2,'.dbf', sep='')
+    luchg.recovery.db.filename<-paste("LUCHG_recovery_database",location,'_',period1,'_',period2,'.dbf', sep='')
     write.dbf(luchg.recovery.att, luchg.recovery.db.filename)
   },error=function(e){cat("Skipping database export process :",conditionMessage(e), "\n")})
   
@@ -889,7 +887,7 @@ if (grepl(".ldbase", as.character(ldabase.preques))){
     luchg.recovery.focal.area<-as.data.frame(cbind(luchg.recovery.focal.area[1],luchg.recovery.focal.area[2],luchg.recovery.focal.area[7]))
   },error=function(e){cat("Habitat recovery of focal area due to neighboring changes :",conditionMessage(e), "\n")})
   
-  #Habitat recovery due to LULCC in situ 
+  #Habitat recovery due to LULCC in situ
   tryCatch({
     luchg.recovery.10.with.change<-luchg.recovery.10[ which(as.character(luchg.recovery.10$ID_LC2)!=as.character(luchg.recovery.10$ID_LC1)),];#habitat recovery with landuse/landcover change
     luchg.recovery.10.with.change<-as.data.frame(cbind(luchg.recovery.10.with.change[1],luchg.recovery.10.with.change[2],luchg.recovery.10.with.change[7]))
@@ -929,7 +927,7 @@ if (grepl(".ldbase", as.character(ldabase.preques))){
     luchg.gain.att<-merge(lookup_lc,luchg.gain.att,by="ID")
     #luchg.gain.att<-as.data.frame(cbind(luchg.gain.att[1],luchg.gain.att[2],luchg.gain.att[4],luchg.gain.att[5],luchg.gain.att[12],luchg.gain.att[13], luchg.gain.att[14]))
     luchg.gain.att<-luchg.gain.att[ order(-luchg.gain.att[,3]), ]
-    luchg.gain.db.filename<-paste("LUCHG_gain_database",location,'_',year1,'_',year2,'.dbf', sep='')
+    luchg.gain.db.filename<-paste("LUCHG_gain_database",location,'_',period1,'_',period2,'.dbf', sep='')
     write.dbf(luchg.gain.att, luchg.gain.db.filename)
     #top 10 subsequent LULC related to habitat gain
     luchg.gain.10<-luchg.gain.att[1:10,]
@@ -971,7 +969,7 @@ if (grepl(".ldbase", as.character(ldabase.preques))){
   
   #write zonal stats table for habitat gain
   tryCatch({
-    zstat.gain.gain.filename<-paste("Habitat_gain_zonal_stat_",location,'_',year1,'_',year2,'.dbf', sep='')
+    zstat.gain.gain.filename<-paste("Habitat_gain_zonal_stat_",location,'_',period1,'_',period2,'.dbf', sep='')
     write.dbf(zstat.habitat.gain.NA, zstat.gain.gain.filename)
   },error=function(e){cat("write zonal stats table for habitat gain :",conditionMessage(e), "\n")})
   
@@ -1069,28 +1067,58 @@ plot.Z<-gplot(zone, maxpixels=100000) + geom_raster(aes(fill=as.factor(value))) 
          legend.key.height = unit(0.25, "cm"),
          legend.key.width = unit(0.25, "cm"))
 
-#Focal Area Change
-lookup_loss<-as.data.frame(cbind(0,NA))
-lookup_loss<-rbind(lookup_loss, cbind(1,2))
-foc.area.loss.reclass<- reclassify(chk_loss, lookup_loss)
-foc.area.change<-mosaic(foc.area.init, foc.area.loss.reclass, fun="max")
-ID<-as.data.frame(levels(ratify(foc.area.change)));# or as.data.frame(na.omit(freq(foc.area.change)))
-Label<-c("Non Focal Area", "Stable Focal Area", "Focal Area Loss")
-FAC<-as.data.frame(cbind(ID, Label))
-myColors.FAC <- c("#FFCC66", "#003300","#FF0000")
-ColScale.FAC<-scale_fill_manual(name="Area Class", breaks=FAC$ID, labels=FAC$Label, values=myColors.FAC)
-plot.FAC<-gplot(foc.area.change, maxpixels=100000) + geom_raster(aes(fill=as.factor(value))) +
-  coord_equal() + ColScale.FAC +
-  theme(plot.title = element_text(lineheight= 5, face="bold")) +
-  theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
-         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
-         legend.title = element_text(size=8),
-         legend.text = element_text(size = 6),
-         legend.key.height = unit(0.25, "cm"),
-         legend.key.width = unit(0.25, "cm"))
+#Focal Area Change: plot.FAC.loss and plot.FAC.gain
+lookup_change<-as.data.frame(cbind(0,NA))
+lookup_change<-rbind(lookup_change, cbind(1,2))
+
+if(maxValue(chk_loss)>0)
+{
+  foc.area.loss.reclass<- reclassify(chk_loss, lookup_change)
+  foc.area.loss<-mosaic(foc.area.init, foc.area.loss.reclass, fun="max")
+  ID<-as.data.frame(levels(ratify(foc.area.loss)));# or as.data.frame(na.omit(freq(foc.area.loss)))
+  Label<-c("Non Focal Area", "Stable Focal Area", "Focal Area loss")
+  FAC<-as.data.frame(cbind(ID, Label))
+  myColors.FAC <- c("#FFCC66", "#003300","#FF0000")
+  ColScale.FAC<-scale_fill_manual(name="Area Class", breaks=FAC$ID, labels=FAC$Label, values=myColors.FAC)
+  plot.FAC.loss<-gplot(foc.area.loss, maxpixels=100000) + geom_raster(aes(fill=as.factor(value))) +
+    coord_equal() + ColScale.FAC +
+    theme(plot.title = element_text(lineheight= 5, face="bold")) +
+    theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
+           panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+           legend.title = element_text(size=8),
+           legend.text = element_text(size = 6),
+           legend.key.height = unit(0.25, "cm"),
+           legend.key.width = unit(0.25, "cm"))
+} else 
+{
+  print("No Habitat loss found")
+}
+
+if(maxValue(chk_gain)>0)
+{
+  foc.area.gain.reclass<- reclassify(chk_gain, lookup_change)
+  foc.area.gain<-mosaic(foc.area.init, foc.area.gain.reclass, fun="max")
+  ID<-as.data.frame(levels(ratify(foc.area.gain)));# or as.data.frame(na.omit(freq(foc.area.gain)))
+  Label<-c("Non Focal Area", "Stable Focal Area", "Focal Area gain")
+  FAC<-as.data.frame(cbind(ID, Label))
+  myColors.FAC <- c("#FFCC66", "#003300","#0276FD")
+  ColScale.FAC<-scale_fill_manual(name="Area Class", breaks=FAC$ID, labels=FAC$Label, values=myColors.FAC)
+  plot.FAC.gain<-gplot(foc.area.gain, maxpixels=100000) + geom_raster(aes(fill=as.factor(value))) +
+    coord_equal() + ColScale.FAC +
+    theme(plot.title = element_text(lineheight= 5, face="bold")) +
+    theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
+           panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+           legend.title = element_text(size=8),
+           legend.text = element_text(size = 6),
+           legend.key.height = unit(0.25, "cm"),
+           legend.key.width = unit(0.25, "cm"))
+} else 
+{
+  print("No Habitat gain found")
+}
 
 #====Habitat extent Map t1====
-plot.mw.init<-gplot(mwfile.init, maxpixels=100000) + geom_raster(aes(fill=value)) + 
+plot.mw.init<-gplot(mwfile.init, maxpixels=100000) + geom_raster(aes(fill=value)) +
   coord_equal() + scale_fill_gradient(low = "#FFCC66", high="#003300", guide="colourbar") +
   theme(plot.title = element_text(lineheight= 5, face="bold")) +
   theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
@@ -1118,7 +1146,7 @@ tryCatch({
   maxval<-maxval*10
   background[background==1]<-(-maxval)
   plot.hbt.loss<-merge(habitat.degradation, background, overlap=TRUE)
-  plot.HD<-gplot(plot.hbt.loss, maxpixels=100000) + geom_raster(aes(fill=value)) + 
+  plot.HD<-gplot(plot.hbt.loss, maxpixels=100000) + geom_raster(aes(fill=value)) +
     coord_equal() + scale_fill_gradient2(low="#999999",mid = "#FFCC66", high="#003300",limits=c(0,maxval), guide="colourbar") +
     theme(plot.title = element_text(lineheight= 5, face="bold")) +
     theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
@@ -1135,7 +1163,7 @@ tryCatch({
   #maxval<-maxval*10
   background[background==1]<-(-maxval)
   plot.hbt.loss<-merge(habitat.loss.NA, background, overlap=TRUE)
-  plot.HL<-gplot(plot.hbt.loss, maxpixels=100000) + geom_raster(aes(fill=value)) + 
+  plot.HL<-gplot(plot.hbt.loss, maxpixels=100000) + geom_raster(aes(fill=value)) +
     coord_equal() + scale_fill_gradient2(low="#999999",mid = "#FFCC66", high="#003300",limits=c(0,maxval), guide="colourbar") +
     theme(plot.title = element_text(lineheight= 5, face="bold")) +
     theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
@@ -1154,7 +1182,7 @@ tryCatch({
   maxval<-maxval*10
   background[background==1]<-(-maxval)
   plot.hbt.gain<-merge(habitat.recovery, background, overlap=TRUE)
-  plot.HR<-gplot(plot.hbt.gain, maxpixels=100000) + geom_raster(aes(fill=value)) + 
+  plot.HR<-gplot(plot.hbt.gain, maxpixels=100000) + geom_raster(aes(fill=value)) +
     coord_equal() + scale_fill_gradient2(low="#999999",mid = "#FFCC66", high="#003300",limits=c(0,maxval), guide="colourbar") +
     theme(plot.title = element_text(lineheight= 5, face="bold")) +
     theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
@@ -1172,7 +1200,7 @@ tryCatch({
   #maxval<-maxval*10
   background[background==1]<-(-maxval)
   plot.hbt.gain<-merge(habitat.gain.NA, background, overlap=TRUE)
-  plot.HG<-gplot(plot.hbt.gain, maxpixels=100000) + geom_raster(aes(fill=value)) + 
+  plot.HG<-gplot(plot.hbt.gain, maxpixels=100000) + geom_raster(aes(fill=value)) +
     coord_equal() + scale_fill_gradient2(low="#999999",mid = "#FFCC66", high="#003300",limits=c(0,maxval), guide="colourbar") +
     theme(plot.title = element_text(lineheight= 5, face="bold")) +
     theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
@@ -1227,8 +1255,8 @@ time_start<-paste("Processing started : ", time_start, sep="")
 time_end<-paste("Processing ended : ", eval(parse(text=(paste("Sys.time ()")))), sep="")
 line<-paste("------------------------------------------------------------------------------------------------------------------------------------------------")
 area_name_rep<-paste("\\b", "\\fs20", location, "\\b0","\\fs20")
-I_O_period_1_rep<-paste("\\b","\\fs20", year1)
-I_O_period_2_rep<-paste("\\b","\\fs20", year2)
+I_O_period_1_rep<-paste("\\b","\\fs20", period1)
+I_O_period_2_rep<-paste("\\b","\\fs20", period2)
 chapter1<-"\\b\\fs24 I. DATA INPUT \\b0\\fs20"
 chapter2<-"\\b\\fs24 II. FOCAL AREA CHANGES \\b0\\fs20"
 chapter3<-"\\b\\fs24 III. MAP OF DISSIMILARITIES FROM FOCAL AREAS RELATIVE TO ZONE/PLANNING UNIT \\b0\\fs20"
@@ -1269,19 +1297,36 @@ addNewLine(rtffile, n=1)
 addNewLine(rtffile, n=1)
 addNewLine(rtffile, n=1)
 
-
+if(maxValue(chk_loss)>0)
+{
 addParagraph(rtffile, chapter2)
 addNewLine(rtffile)
 text <- paste("\\b \\fs20 Focal Area Change Map of \\b0 \\fs20 ", area_name_rep, I_O_period_1_rep, "\\b \\fs20 - \\b0 \\fs20 ", I_O_period_2_rep,  sep="")
 addParagraph(rtffile, text)
-addPlot.RTF(rtffile, plot.fun=plot, width=6.7, height=4, res=150, plot.FAC )
+addPlot.RTF(rtffile, plot.fun=plot, width=6.7, height=4, res=150, plot.FAC.loss )
 addNewLine(rtffile, n=1)
-text <- paste("\\b \\fs20 Subsequent land uses following focal area loss in \\b0 \\fs20 ",area_name_rep, I_O_period_1_rep,I_O_period_2_rep,  sep="")
+text <- paste("\\b \\fs20 Subsequent land uses following focal area loss in \\b0 \\fs20 ",area_name_rep, I_O_period_1_rep,I_O_period_2_rep,  sep=" ")
 addParagraph(rtffile, text)
 addTable(rtffile, foc.area.loss.att)
 addParagraph(rtffile, "\\b \\fs20 *Area in Hectares Unit ; Proportion in Percentage (%) \\b0 \\fs20 ")
 addNewLine(rtffile, n=1)
-text <- paste("\\b \\fs20 Focal Area Change by Zone/Planning Unit  in \\b0 \\fs20 ",area_name_rep, I_O_period_1_rep,I_O_period_2_rep,  sep="")
+} else {print("No habitat loss found")}
+
+if(maxValue(chk_gain)>0)
+{
+addNewLine(rtffile)
+text <- paste("\\b \\fs20 Focal Area Change Map of \\b0 \\fs20 ", area_name_rep, I_O_period_1_rep, "\\b \\fs20 - \\b0 \\fs20 ", I_O_period_2_rep,  sep="")
+addParagraph(rtffile, text)
+addPlot.RTF(rtffile, plot.fun=plot, width=6.7, height=4, res=150, plot.FAC.gain )
+addNewLine(rtffile, n=1)
+text <- paste("\\b \\fs20 Subsequent land uses following focal area gain in \\b0 \\fs20 ",area_name_rep, I_O_period_1_rep,'\\b \\fs20 - \\b0 \\fs20',I_O_period_2_rep,  sep=" ")
+addParagraph(rtffile, text)
+addTable(rtffile, foc.area.gain.att)
+addParagraph(rtffile, "\\b \\fs20 *Area in Hectares Unit ; Proportion in Percentage (%) \\b0 \\fs20 ")
+addNewLine(rtffile, n=1)
+} else {print("No habitat gain found")}
+
+text <- paste("\\b \\fs20 Focal Area Change by Zone/Planning Unit  in \\b0 \\fs20 ",area_name_rep, I_O_period_1_rep,'\\b \\fs20 - \\b0 \\fs20',I_O_period_2_rep,  sep=" ")
 addParagraph(rtffile, text)
 addTable(rtffile, zstat.foc.area)
 addParagraph(rtffile, "\\b \\fs20 *Area in Hectares Unit ; Proportion in Percentage (%) \\b0 \\fs20 ")
@@ -1318,110 +1363,113 @@ addNewLine(rtffile, n=1)
 addParagraph(rtffile, chapter5)
 addNewLine(rtffile)
 tryCatch({
-text <- paste("\\b \\fs20 1.Habitat degradation \\b0 \\fs20 ",area_name_rep, I_O_period_1_rep, "\\b \\fs20 - \\b0 \\fs20 ", I_O_period_2_rep,  sep="")
-addParagraph(rtffile, text)
-addPlot.RTF(rtffile, plot.fun=print, width=6.7, height=3, res=150, plot.HD)
-addNewLine(rtffile, n=1)
-text <- paste("\\b \\fs20 Habitat degradation due to LULCC in situ \\b0 \\fs20 ", sep="")
-addParagraph(rtffile, text)
-addTable(rtffile, luchg.degradation.10.with.change)
-addNewLine(rtffile, n=1)
-text <- paste("\\b \\fs20 Habitat degradation due to neighboring focal area change \\b0 \\fs20 ", sep="")
-addParagraph(rtffile, text)
-addTable(rtffile, luchg.degradation.10.no.change)
-addNewLine(rtffile, n=1)
-text <- paste("\\b \\fs20 Habitat degradation of focal area due to neighboring changes \\b0 \\fs20 ", sep="")
-addParagraph(rtffile, text)
-addTable(rtffile, luchg.degradation.focal.area)
-addNewLine(rtffile, n=1)
+  text <- paste("\\b \\fs20 1.Habitat degradation \\b0 \\fs20 ",area_name_rep, I_O_period_1_rep, "\\b \\fs20 - \\b0 \\fs20 ", I_O_period_2_rep,  sep="")
+  addParagraph(rtffile, text)
+  addPlot.RTF(rtffile, plot.fun=print, width=6.7, height=3, res=150, plot.HD)
+  addNewLine(rtffile, n=1)
+  text <- paste("\\b \\fs20 Habitat degradation due to LULCC in situ \\b0 \\fs20 ", sep="")
+  addParagraph(rtffile, text)
+  addTable(rtffile, luchg.degradation.10.with.change)
+  addNewLine(rtffile, n=1)
+  text <- paste("\\b \\fs20 Habitat degradation due to neighboring focal area change \\b0 \\fs20 ", sep="")
+  addParagraph(rtffile, text)
+  addTable(rtffile, luchg.degradation.10.no.change)
+  addNewLine(rtffile, n=1)
+  text <- paste("\\b \\fs20 Habitat degradation of focal area due to neighboring changes \\b0 \\fs20 ", sep="")
+  addParagraph(rtffile, text)
+  addTable(rtffile, luchg.degradation.focal.area)
+  addNewLine(rtffile, n=1)
 },error=function(e){cat("skipping habitat degradation plot :",conditionMessage(e), "\n")})
 addNewLine(rtffile, n=1)
 
 tryCatch({
-text <- paste("\\b \\fs20 2.Habitat loss \\b0 \\fs20 ",area_name_rep, I_O_period_1_rep, "\\b \\fs20 - \\b0 \\fs20 ", I_O_period_2_rep,  sep="")
-addParagraph(rtffile, text)
-addPlot.RTF(rtffile, plot.fun=print, width=6.7, height=3, res=150, plot.HL)
-addNewLine(rtffile, n=1)
-text <- paste("\\b \\fs20 Top 10 habitat loss due adjacent focal area loss \\b0 \\fs20 ", sep="")
-addParagraph(rtffile, text)
-addTable(rtffile, luchg.loss.10)
-addNewLine(rtffile, n=1)
-text <- paste("\\b \\fs20 Habitat loss statistics by zone/planning unit \\b0 \\fs20 ", sep="")
-addParagraph(rtffile, text)
-addTable(rtffile, zstat.habitat.loss.NA)
-addNewLine(rtffile, n=1)
+  if(maxValue(chk_loss)>0)
+  {
+  text <- paste("\\b \\fs20 2.Habitat loss \\b0 \\fs20 ",area_name_rep, I_O_period_1_rep, "\\b \\fs20 - \\b0 \\fs20 ", I_O_period_2_rep,  sep="")
+  addParagraph(rtffile, text)
+  addPlot.RTF(rtffile, plot.fun=print, width=6.7, height=3, res=150, plot.HL)
+  addNewLine(rtffile, n=1)
+  text <- paste("\\b \\fs20 Top 10 habitat loss due adjacent focal area loss \\b0 \\fs20 ", sep="")
+  addParagraph(rtffile, text)
+  addTable(rtffile, luchg.loss.10)
+  addNewLine(rtffile, n=1)
+  text <- paste("\\b \\fs20 Habitat loss statistics by zone/planning unit \\b0 \\fs20 ", sep="")
+  addParagraph(rtffile, text)
+  addTable(rtffile, zstat.habitat.loss.NA)
+  addNewLine(rtffile, n=1)
+  } else {print("No habitat loss found")}
 },error=function(e){cat("skipping habitat loss plot :",conditionMessage(e), "\n")})
 addNewLine(rtffile, n=1)
 
 tryCatch({
-text <- paste("\\b \\fs20 3.Habitat recovery \\b0 \\fs20 ",area_name_rep, I_O_period_1_rep, "\\b \\fs20 - \\b0 \\fs20 ", I_O_period_2_rep,  sep="")
-addParagraph(rtffile, text)
-addPlot.RTF(rtffile, plot.fun=print, width=6.7, height=3, res=150, plot.HR)
-addNewLine(rtffile, n=1)
-text <- paste("\\b \\fs20 Habitat recovery due to LULCC in situ \\b0 \\fs20 ", sep="")
-addParagraph(rtffile, text)
-addTable(rtffile, luchg.recovery.10.with.change)
-addNewLine(rtffile, n=1)
-text <- paste("\\b \\fs20 Habitat recovery due to neighboring focal area change \\b0 \\fs20 ", sep="")
-addParagraph(rtffile, text)
-addTable(rtffile, luchg.recovery.10.no.change)
-addNewLine(rtffile, n=1)
-text <- paste("\\b \\fs20 Habitat recovery of focal area due to neighboring changes \\b0 \\fs20 ", sep="")
-addParagraph(rtffile, text)
-addTable(rtffile, luchg.recovery.focal.area)
-addNewLine(rtffile, n=1)
+  text <- paste("\\b \\fs20 3.Habitat recovery \\b0 \\fs20 ",area_name_rep, I_O_period_1_rep, "\\b \\fs20 - \\b0 \\fs20 ", I_O_period_2_rep,  sep="")
+  addParagraph(rtffile, text)
+  addPlot.RTF(rtffile, plot.fun=print, width=6.7, height=3, res=150, plot.HR)
+  addNewLine(rtffile, n=1)
+  text <- paste("\\b \\fs20 Habitat recovery due to LULCC in situ \\b0 \\fs20 ", sep="")
+  addParagraph(rtffile, text)
+  addTable(rtffile, luchg.recovery.10.with.change)
+  addNewLine(rtffile, n=1)
+  text <- paste("\\b \\fs20 Habitat recovery due to neighboring focal area change \\b0 \\fs20 ", sep="")
+  addParagraph(rtffile, text)
+  addTable(rtffile, luchg.recovery.10.no.change)
+  addNewLine(rtffile, n=1)
+  text <- paste("\\b \\fs20 Habitat recovery of focal area due to neighboring changes \\b0 \\fs20 ", sep="")
+  addParagraph(rtffile, text)
+  addTable(rtffile, luchg.recovery.focal.area)
+  addNewLine(rtffile, n=1)
 },error=function(e){cat("skipping habitat recovery plot :",conditionMessage(e), "\n")})
 addNewLine(rtffile, n=1)
 
 tryCatch({
-text <- paste("\\b \\fs20 4.Habitat gain \\b0 \\fs20 ",area_name_rep, I_O_period_1_rep, "\\b \\fs20 - \\b0 \\fs20 ", I_O_period_2_rep,  sep="")
-addParagraph(rtffile, text)
-if (maxValue(chk_gain)>0) {
-addPlot.RTF(rtffile, plot.fun=print, width=6.7, height=3, res=150, plot.HG)
-} else {print('skipping habitat gain plot ')}
-addNewLine(rtffile, n=1)
-text <- paste("\\b \\fs20 Top 10 habitat gain due adjacent focal area loss \\b0 \\fs20 ", sep="")
-addParagraph(rtffile, text)
-addTable(rtffile, luchg.gain.10)
-addNewLine(rtffile, n=1)
-text <- paste("\\b \\fs20 Habitat gain statistics by zone/planning unit \\b0 \\fs20 ", sep="")
-addParagraph(rtffile, text)
-addTable(rtffile, zstat.habitat.gain.NA)
-addNewLine(rtffile, n=1)
+  if(maxValue(chk_gain)>0)
+  {
+  text <- paste("\\b \\fs20 4.Habitat gain \\b0 \\fs20 ",area_name_rep, I_O_period_1_rep, "\\b \\fs20 - \\b0 \\fs20 ", I_O_period_2_rep,  sep="")
+  addParagraph(rtffile, text)
+  if (maxValue(chk_gain)>0) {
+    addPlot.RTF(rtffile, plot.fun=print, width=6.7, height=3, res=150, plot.HG)
+  } else {print('skipping habitat gain plot ')}
+  addNewLine(rtffile, n=1)
+  text <- paste("\\b \\fs20 Top 10 habitat gain due adjacent focal area loss \\b0 \\fs20 ", sep="")
+  addParagraph(rtffile, text)
+  addTable(rtffile, luchg.gain.10)
+  addNewLine(rtffile, n=1)
+  text <- paste("\\b \\fs20 Habitat gain statistics by zone/planning unit \\b0 \\fs20 ", sep="")
+  addParagraph(rtffile, text)
+  addTable(rtffile, zstat.habitat.gain.NA)
+  addNewLine(rtffile, n=1)
+  } else {print("No habitat gain found")}
 },error=function(e){cat("skipping habitat gain plot :",conditionMessage(e), "\n")})
 
 
 addParagraph(rtffile, chapter6)
 addNewLine(rtffile)
 tryCatch({
-text <- paste("\\b \\fs20 Habitat Quality Comparison in \\b0 \\fs20 ",area_name_rep, I_O_period_1_rep, "\\b \\fs20 - \\b0 \\fs20 ", I_O_period_2_rep,  sep="")
-addParagraph(rtffile, text)
-addPlot.RTF(rtffile, plot.fun=print, width=6.7, height=4, res=150, grid.arrange(plot.hb.chg.init, plot.hb.chg.final, ncol=2) )
-addNewLine(rtffile, n=1)
-addTable(rtffile, habitat.change)
-addNewLine(rtffile, n=1)
+  text <- paste("\\b \\fs20 Habitat Quality Comparison in \\b0 \\fs20 ",area_name_rep, I_O_period_1_rep, "\\b \\fs20 - \\b0 \\fs20 ", I_O_period_2_rep,  sep="")
+  addParagraph(rtffile, text)
+  addPlot.RTF(rtffile, plot.fun=print, width=6.7, height=4, res=150, grid.arrange(plot.hb.chg.init, plot.hb.chg.final, ncol=2) )
+  addNewLine(rtffile, n=1)
+  addTable(rtffile, habitat.change)
+  addNewLine(rtffile, n=1)
 },error=function(e){cat("skipping Habitat Quality Comparison analysis:",conditionMessage(e), "\n")})
 addNewLine(rtffile, n=1)
 
 addParagraph(rtffile, chapter7)
 addNewLine(rtffile)
 tryCatch({
-addTable(rtffile, zstat.habitat.degradation)
-addParagraph(rtffile, "\\b \\fs20 *max, min, mean, and sd are total edge contrast index value representing habitat loss and degradation degree \\b0 \\fs20 ")
-addParagraph(rtffile, "\\b \\fs20 *foc.area or total focal area in is Hectare unit \\b0 \\fs20 ")
-addNewLine(rtffile, n=1)
-addTable(rtffile, zstat.habitat.recovery)
-addParagraph(rtffile, "\\b \\fs20 *max, min, mean, and sd are total edge contrast index value representing habitat gain and recovery degree \\b0 \\fs20 ")
-addParagraph(rtffile, "\\b \\fs20 *foc.area or total focal area is in Hectare unit \\b0 \\fs20 ")
-addNewLine(rtffile, n=1)
+  addTable(rtffile, zstat.habitat.degradation)
+  addParagraph(rtffile, "\\b \\fs20 *max, min, mean, and sd are total edge contrast index value representing habitat loss and degradation degree \\b0 \\fs20 ")
+  addParagraph(rtffile, "\\b \\fs20 *foc.area or total focal area in is Hectare unit \\b0 \\fs20 ")
+  addNewLine(rtffile, n=1)
+  addTable(rtffile, zstat.habitat.recovery)
+  addParagraph(rtffile, "\\b \\fs20 *max, min, mean, and sd are total edge contrast index value representing habitat gain and recovery degree \\b0 \\fs20 ")
+  addParagraph(rtffile, "\\b \\fs20 *foc.area or total focal area is in Hectare unit \\b0 \\fs20 ")
+  addNewLine(rtffile, n=1)
 },error=function(e){cat("TECI Zonal statistics analysis :",conditionMessage(e), "\n")})
 addNewLine(rtffile, n=1)
-#rm(plot.C1) 
-
 done(rtffile)
 
-
-
-
-#zstat.habitat.rec.init<-zonal(habitat.rec.init,zone, fun='sum')
-#zstat.habitat.rec.final<-zonal(habitat.rec.final,zone, fun='sum')
+tryCatch({
+dbase.preques.name<-paste("QuES_B_database_", location,'_',period1,'_',period2,'.ldbase', sep='')
+save(lu1,lu2, zone, lookup_bh, lookup_z, period1, period2, location, mwfile.init,mwfile.final,habitat.degradation,habitat.loss.NA,habitat.gain.NA, habitat.recovery,file=dbase.preques.name)
+},error=function(e){cat("QuES-B database production is failed, re-check your data :",conditionMessage(e), "\n")})
