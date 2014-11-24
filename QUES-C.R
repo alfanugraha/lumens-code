@@ -40,15 +40,15 @@ library(markdown)
 library(rtf)
 
 #just delete this part before exported into model
-working_directory="C:/Users/ANugraha/Desktop/quesc"
-landuse1="C:/Users/ANugraha/Documents/LUMENS/JambiNKal/LUMENS_kal/2_Raster/03_Kutim/kutim_lc00_utm50n.tif"
-landuse2="C:/Users/ANugraha/Documents/LUMENS/JambiNKal/LUMENS_kal/2_Raster/03_Kutim/kutim_lc05_utm50n.tif"
-zone="C:/Users/ANugraha/Documents/LUMENS/JambiNKal/4_Raster_zone/Zona_sk942_Kutim.tif"
-periode1=2000
-periode2=2005
-location="Kutai Timur"
-carbon_lookup="C:/Users/ANugraha/Documents/LUMENS/JambiNKal/3_Table/3_Kutim/Tabel_cadangan_karbon.csv"
-zone_lookup="C:/Users/ANugraha/Documents/LUMENS/JambiNKal/3_Table/3_Kutim/Tabel_zonasi.csv"
+working_directory="R:/Work/tes QUES-C/"
+landuse1="Banyumas//Banyumas_lc05_49s_ND.tif"
+landuse2="Banyumas//Banyumas_lc10_49s_ND.tif"
+zone="Banyumas//Banyumas_kws_nop2012_49s_ND.tif"
+periode1=2005
+periode2=2010
+location="Banyumas"
+carbon_lookup="Banyumas//Cadangan_karbon_Banyumas.csv"
+zone_lookup="Banyumas//Zone_Banyumas.csv"
 nodata=27
 
 time_start<-paste(eval(parse(text=(paste("Sys.time ()")))), sep="")
@@ -288,12 +288,20 @@ for (i in 1:length(zone_lookup$ID)){
 rm(tb_seq, tb_seq_total, tb_seq_z, tb_seq_z_10)
 
 #====Zonal Additional Statistics====
-name.matrix<-lookup_lc[which(lookup_lc$ID !=0),]
-name.matrix$LC_CODE<-toupper(abbreviate(name.matrix$LC, minlength=4, method="both"))
-if (((length(data_merge$ID_LC1))>(length(data_merge$ID_LC2)))){
+if (((length(unique(data_merge$ID_LC1)))>(length(unique(data_merge$ID_LC2))))){
   dimention<-length(unique(data_merge$ID_LC1))
+  name.matrix<-cbind(as.data.frame(data_merge$ID_LC1), as.data.frame(data_merge$LC_t1))
+  name.matrix<-unique(name.matrix)
+  colnames(name.matrix)<-c("ID","LC")
+  name.matrix<-name.matrix[order(name.matrix$ID),]
+  name.matrix$LC_CODE<-toupper(abbreviate(name.matrix$LC, minlength=4, method="both"))
 } else{
   dimention<-length(unique(data_merge$ID_LC2))
+  name.matrix<-cbind(as.data.frame(data_merge$ID_LC2), as.data.frame(data_merge$LC_t2))
+  name.matrix<-unique(name.matrix)
+  colnames(name.matrix)<-c("ID","LC")
+  name.matrix<-name.matrix[order(name.matrix$ID),]
+  name.matrix$LC_CODE<-toupper(abbreviate(name.matrix$LC, minlength=4, method="both"))
 }
 
 #====Zonal Emission matrix====
@@ -407,11 +415,18 @@ myColors7 <- brewer.pal(11, "Spectral")
 myColors  <-c(myColors7,myColors1, myColors2, myColors3, myColors4, myColors5, myColors6)
 rm(myColors7,myColors1, myColors2, myColors3, myColors4, myColors5, myColors6)
 
+
 #====Landuse 1 map====
 myColors.lu <- myColors[1:length(unique(lookup_lc$ID))]
-ColScale.lu<-scale_fill_manual(name="Land Use Class", breaks=lookup_lc$ID, labels=lookup_lc$LC, values=myColors.lu)
+lookup_lc$Colors<-myColors.lu
+lu1<-data_merge[,3]
+lu1<-as.data.frame(unique(lu1))
+colnames(lu1)<-"ID"
+lu1<-merge(lu1,lookup_lc, by="ID")
+lu1<-lu1[order(lu1$ID),]
+ColScale.lu1<-scale_fill_manual(name="Land Use Class", breaks=lu1$ID, labels=lu1$LC, values=lu1$Colors)
 plot.LU1<-gplot(landuse1, maxpixels=100000) + geom_raster(aes(fill=as.factor(value))) +
-  coord_equal() + ColScale.lu +
+  coord_equal() + ColScale.lu1 +
   theme(plot.title = element_text(lineheight= 5, face="bold")) +
   theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
          panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
@@ -420,11 +435,15 @@ plot.LU1<-gplot(landuse1, maxpixels=100000) + geom_raster(aes(fill=as.factor(val
          legend.key.height = unit(0.25, "cm"),
          legend.key.width = unit(0.25, "cm"))
 
-
 #====Landuse 2 map====
-ColScale.lu<-scale_fill_manual(name="Land Use Class", breaks=lookup_lc$ID, labels=lookup_lc$LC, values=myColors.lu)
+lu2<-data_merge[,2]
+lu2<-as.data.frame(unique(lu2))
+colnames(lu2)<-"ID"
+lu2<-merge(lu2,lookup_lc, by="ID")
+lu2<-lu2[order(lu2$ID),]
+ColScale.lu2<-scale_fill_manual(name="Land Use Class", breaks=lu2$ID, labels=lu2$LC, values=lu2$Colors)
 plot.LU2<-gplot(landuse2, maxpixels=100000) + geom_raster(aes(fill=as.factor(value))) +
-  coord_equal() + ColScale.lu +
+  coord_equal() + ColScale.lu2 +
   theme(plot.title = element_text(lineheight= 5, face="bold")) +
   theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
          panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
