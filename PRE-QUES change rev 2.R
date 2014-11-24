@@ -1,14 +1,14 @@
 ##[QUES]=group
 working_directory="C:/QUES_B_DJB/preques_merangin_2000_2005/"
-landuse_1="C:/QUES_B_DJB/Data_QUESB/Merangin/raster/lc_2000_Mrg.tif"
-landuse_2="C:/QUES_B_DJB/Data_QUESB/Merangin/raster/lc_2005_Mrg.tif"
-zone_l="C:/QUES_B_DJB/Data_QUESB/Merangin/raster/Zona_Merangin.tif"
+landuse_1="C:/QUES_B_DJB/Data_QUESB/Merangin/raster/lc_2000_Mrg1.tif"
+landuse_2="C:/QUES_B_DJB/Data_QUESB/Merangin/raster/lc_2005_Mrg1.tif"
+zone_l="C:/QUES_B_DJB/Data_QUESB/Merangin/raster/zone_merangin_reclass.tif"
 period1=2000
 period2=2005
 location="Merangin"
 lookup_lc="C:/QUES_B_DJB/Data_QUESB/Merangin/Tabel_landuse.csv"
 lookup_zo="C:/QUES_B_DJB/Data_QUESB/Merangin/Tabel_zona_Merangin.csv"
-raster.nodata<-128
+raster.nodata<-0
 ##luchg=output raster
 ##proj_prop=output table
 ##data_merge_sel=output table
@@ -160,8 +160,8 @@ data_merge <- as.data.frame(merge(data_merge,lookup_z,by="ZONE"))
 data_merge_sel <- data_merge[ which(data_merge$COUNT > 0),]
 data_merge_sel$LU_CHG <- do.call(paste, c(data_merge_sel[c("LC_t1", "LC_t2")], sep = " to "))
 lg_chg <- data_merge_sel
-lg_chg$ID1<-as.numeric(lg_chg$ID_LC1)
-lg_chg$ID2<-as.numeric(lg_chg$ID_LC2)
+lg_chg$ID1<-as.numeric(as.character((lg_chg$ID_LC1)))
+lg_chg$ID2<-as.numeric(as.character((lg_chg$ID_LC2)))
 lg_chg$IDC<-lg_chg$ID1-lg_chg$ID2
 lg_chg<-lg_chg[ which(lg_chg$IDC!=0),]
 lg_chg <- as.data.frame(lg_chg[order(-lg_chg$COUNT),])
