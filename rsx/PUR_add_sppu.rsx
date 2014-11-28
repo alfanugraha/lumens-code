@@ -4,7 +4,7 @@
 ##rec_data=raster
 ##rec_lookup=file
 ##loc=string
-##PUR_overlap_summary=output table
+#PUR_overlap=output table
 ##PUR2=output raster
 ##passfilenames
 
