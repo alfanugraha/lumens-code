@@ -40,9 +40,9 @@ None
 -1|HARDCODEDPARAMVALUE_DISSOLVE_ALL_2
 -1|HARDCODEDPARAMVALUE_FIELD_2
 None
-ALGORITHM:r:purextjoinatttablesppu
-788.0,454.0
+ALGORITHM:r:purextjoinatttable
+712.0,470.0
 None
 -1|FILE_WORKINGDIRECTORY
 2|OUTPUT
-PUR_reconciled_Planning_Unit|920.0,582.0
+Reconciled_planning_unit|948.0,497.0
