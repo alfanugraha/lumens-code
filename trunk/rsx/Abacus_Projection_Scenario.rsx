@@ -251,7 +251,11 @@ write("\n", paste(Set_Working_Directory, "/",Scenario_name,".car",sep=""),append
 
 Abacus_Project_File = paste(Set_Working_Directory, "/",Scenario_name,".car",sep="") #work with car file and also supported text file with abacus project format
 
-abacusExecutable = "C:/Progra~2/LUMENS/Abacus/abacus " #the default directory for abacus executable 
+if (file.exists("C:/Program Files (x86)/LUMENS/AbacusScenario")){
+  abacusExecutable = "C:/Progra~2/LUMENS/AbacusScenario/abacus "
+} else{
+  abacusExecutable = "C:/Progra~1/LUMENS/AbacusScenario/abacus "
+}
 systemCommand <- paste(abacusExecutable, Abacus_Project_File)
 
 system(systemCommand)
