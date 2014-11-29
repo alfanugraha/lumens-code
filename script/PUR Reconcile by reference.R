@@ -1,4 +1,3 @@
-##[PUR]=group
 ##WDir=folder
 ##data=file
 ##ref=file
@@ -7,7 +6,7 @@
 ##report
 
 
-
+ptm <- proc.time()
 library(sp)
 library(maptools)
 library(rgdal)
@@ -24,12 +23,13 @@ library(rtf)
 
 #add new data input: study area border, it can be from dissolved reference map, or manually included
 #study area border should be optional
+
 time_start<-paste(eval(parse(text=(paste("Sys.time ()")))), sep="")
-wd<-"C:/LUMENS_kal/1_PUR/1_Prop_Kaltim"
-loc<-"Kalimantan Timur"
-PUR_data<- "C:/LUMENS_kal/1_PUR/1_Prop_Kaltim/PUR_data.csv"
-ref_data<- "C:/LUMENS_kal/1_PUR/1_Prop_Kaltim/PUR_reference.csv"
-recon_class<-"C:/LUMENS_kal/1_PUR/1_Prop_Kaltim/hirarki_rekonsiliasi.csv"
+wd<-"C:/LUMENS_kal/1_PUR/4_Paser/"
+loc<-"Paser"
+PUR_data<- "C:/LUMENS_kal/1_PUR/4_Paser/PUR_data.csv"
+ref_data<- "C:/LUMENS_kal/1_PUR/4_Paser/PUR_reference.csv"
+recon_class<-"C:/LUMENS_kal/1_PUR/4_Paser/hirarki_rekonsiliasi.csv"
 
 #wd <- WDir
 location <- loc
@@ -55,7 +55,7 @@ xlim_sa <- sa@bbox[1, ]
 ylim_sa <- sa@bbox[2, ]
 ext<-extent (sa)
 xy_sa <- abs(apply(as.matrix(bbox(ext)), 1, diff))
-n<-1000  # in meter, need to be modified if in degree 0.0009
+n<-100  # in meter, need to be modified if in degree 0.0009
 r <- raster(ext, ncol=xy_sa[1]/n, nrow=xy_sa[2]/n)
 ref <-rasterize(sa, r)
 ref[is.na(ref)]<-0
@@ -292,6 +292,11 @@ PUR_dbfinal_out$REF_id<-NULL
 writeRaster(PUR_rec2, filename="PUR_reconciliation_result", format="GTiff", overwrite=TRUE)
 writeRaster(PUR, filename="PUR_reconciliation_initial", format="GTiff", overwrite=TRUE)
 
+#WRITE POLYGON
+a<-proc.time()
+#PUR_rec2.shp<-rasterToPolygons(PUR_rec2, fun=NULL, n=4, na.rm=TRUE, digits=12, dissolve=FALSE)
+PUR_rec2.shp<-polygonize (PUR_rec2, 5)
+proc.time()-a
 
 #STATISTICS
 
@@ -626,3 +631,5 @@ addPlot.RTF(rtffile, plot.fun=plot, width=6.7, height=3, res=150, plot.PUR.Rec )
 addNewLine(rtffile)
 
 done(rtffile)
+pte<-proc.time()-ptm
+pte
