@@ -116,7 +116,7 @@ write(text, paste(Set_Working_Directory, "/",Scenario_name,".car",sep=""),append
 carbon<-matrix(ncol=nrow(name.matrix),nrow=nrow(name.matrix),0)
 for(i in 1:nrow(name.matrix)){
   for(j in 1:nrow(name.matrix)){
-    carbon[i,j]<-round(unique(data_merge$CARBON_t1[which(data_merge$ID_LC1==i & data_merge$ID_LC2==j)]),digits=2)
+    carbon[i,j]<-round(unique(data_merge$CARBON_t1[which(data_merge$ID_LC1==name.matrix$ID[i] & data_merge$ID_LC2==name.matrix$ID[j])]),digits=2)
   }
 }
 carbon<-as.data.frame(cbind(as.data.frame(name.matrix$CLASS),carbon))
@@ -251,7 +251,11 @@ write("\n", paste(Set_Working_Directory, "/",Scenario_name,".car",sep=""),append
 
 Abacus_Project_File = paste(Set_Working_Directory, "/",Scenario_name,".car",sep="") #work with car file and also supported text file with abacus project format
 
-abacusExecutable = "C:/Progra~2/LUMENS/Abacus/abacus " #the default directory for abacus executable 
+if (file.exists("C:/Program Files (x86)/LUMENS/AbacusScenario")){
+  abacusExecutable = "C:/Progra~2/LUMENS/AbacusScenario/abacus "
+} else{
+  abacusExecutable = "C:/Progra~1/LUMENS/AbacusScenario/abacus "
+}
 systemCommand <- paste(abacusExecutable, Abacus_Project_File)
 
 system(systemCommand)
