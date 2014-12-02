@@ -116,7 +116,7 @@ write(text, paste(Set_Working_Directory, "/",Scenario_name,".car",sep=""),append
 carbon<-matrix(ncol=nrow(name.matrix),nrow=nrow(name.matrix),0)
 for(i in 1:nrow(name.matrix)){
   for(j in 1:nrow(name.matrix)){
-    carbon[i,j]<-round(unique(data_merge$CARBON_t1[which(data_merge$ID_LC1==i & data_merge$ID_LC2==j)]),digits=2)
+    carbon[i,j]<-round(unique(data_merge$CARBON_t1[which(data_merge$ID_LC1==name.matrix$ID[i] & data_merge$ID_LC2==name.matrix$ID[j])]),digits=2)
   }
 }
 carbon<-as.data.frame(cbind(as.data.frame(name.matrix$CLASS),carbon))
