@@ -1,13 +1,13 @@
 ##[QUES]=group
-working_directory="C:/QUES_B_DJB/preques_merangin_2000_2005/"
-landuse_1="C:/QUES_B_DJB/Data_QUESB/Merangin/raster/lc_2000_Mrg1.tif"
-landuse_2="C:/QUES_B_DJB/Data_QUESB/Merangin/raster/lc_2005_Mrg1.tif"
-zone_l="C:/QUES_B_DJB/Data_QUESB/Merangin/raster/zone_merangin_reclass.tif"
-period1=2000
-period2=2005
-location="Merangin"
-lookup_lc="C:/QUES_B_DJB/Data_QUESB/Merangin/Tabel_landuse.csv"
-lookup_zo="C:/QUES_B_DJB/Data_QUESB/Merangin/Tabel_zona_Merangin.csv"
+working_directory="R:/Pre-QUES/"
+landuse_1="lc1990_jpr.tif"
+landuse_2="lc2010_jpr.tif"
+zone_l="plan_unit_jpr.tif"
+period1=1990
+period2=2010
+location="Jayapura"
+lookup_lc="landuse_Jayapura.csv"
+lookup_zo="planning_unit_jayapura_lookup.csv"
 raster.nodata<-0
 ##luchg=output raster
 ##proj_prop=output table
@@ -194,6 +194,24 @@ for (i in 1:length(area_zone$ID)){
 }
 
 # calculate basic statistic
+#different landuse number handling
+n.lu1<-as.numeric(length(unique(data_merge_sel$ID_LC1)))
+n.lu2<-as.numeric(length(unique(data_merge_sel$ID_LC2)))
+if(n.lu1>n.lu2){
+  diff.lu<-unique(data_merge_sel$ID_LC1)[is.na(match(unique(data_merge_sel$ID_LC1),unique(data_merge_sel$ID_LC2)))]
+  new.lu<-area_lc1[which(area_lc1$ID==diff.lu),]
+  new.lu$COUNT_LC1<-0
+  colnames(new.lu)[2]<-"COUNT_LC2"
+  colnames(new.lu)[3]<-"CLASS_LC2"
+  area_lc1<-rbind(area_lc1,new.lu)
+} else {
+  diff.lu<-unique(data_merge_sel$ID_LC2)[is.na(match(unique(data_merge_sel$ID_LC2),unique(data_merge_sel$ID_LC1)))]
+  new.lu<-area_lc2[which(area_lc2$ID==diff.lu),]
+  new.lu$COUNT_LC2<-0
+  colnames(new.lu)[2]<-"COUNT_LC1"
+  colnames(new.lu)[3]<-"CLASS_LC1"
+  area_lc1<-rbind(area_lc1,new.lu)
+}
 area_summary <- merge(area_lc1,area_lc2,by="ID")
 Ov_chg<-as.data.frame(area_summary$CLASS_LC1)
 colnames(Ov_chg)[1]="Land_use_type"
@@ -303,6 +321,7 @@ plot.LU1<-gplot(landuse1, maxpixels=100000) + geom_raster(aes(fill=as.factor(val
          legend.key.width = unit(0.25, "cm"))
 
 #Landuse 2 map
+myColors.lu <- myColors[1:length(unique(area_lc2$ID))]
 ColScale.lu<-scale_fill_manual(name="Land Use Class", breaks=area_lc2$ID, labels=area_lc2$CLASS_LC2, values=myColors.lu)
 plot.LU2<-gplot(landuse2, maxpixels=100000) + geom_raster(aes(fill=as.factor(value))) +
   coord_equal() + ColScale.lu +
