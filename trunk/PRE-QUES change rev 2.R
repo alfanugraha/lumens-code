@@ -204,13 +204,15 @@ if(n.lu1>n.lu2){
   colnames(new.lu)[2]<-"COUNT_LC2"
   colnames(new.lu)[3]<-"CLASS_LC2"
   area_lc1<-rbind(area_lc1,new.lu)
-} else {
+} else if(n.lu1<n.lu2){
   diff.lu<-unique(data_merge_sel$ID_LC2)[is.na(match(unique(data_merge_sel$ID_LC2),unique(data_merge_sel$ID_LC1)))]
   new.lu<-area_lc2[which(area_lc2$ID==diff.lu),]
   new.lu$COUNT_LC2<-0
   colnames(new.lu)[2]<-"COUNT_LC1"
   colnames(new.lu)[3]<-"CLASS_LC1"
   area_lc1<-rbind(area_lc1,new.lu)
+} else {
+  area_lc1
 }
 area_summary <- merge(area_lc1,area_lc2,by="ID")
 Ov_chg<-as.data.frame(area_summary$CLASS_LC1)
