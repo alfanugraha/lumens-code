@@ -199,14 +199,14 @@ n.lu1<-as.numeric(length(unique(data_merge_sel$ID_LC1)))
 n.lu2<-as.numeric(length(unique(data_merge_sel$ID_LC2)))
 if(n.lu1>n.lu2){
   diff.lu<-unique(data_merge_sel$ID_LC1)[is.na(match(unique(data_merge_sel$ID_LC1),unique(data_merge_sel$ID_LC2)))]
-  new.lu<-area_lc1[which(area_lc1$ID==diff.lu),]
+  new.lu<-area_lc1[area_lc1$ID %in% diff.lu, 1:3]
   new.lu$COUNT_LC1<-0
   colnames(new.lu)[2]<-"COUNT_LC2"
   colnames(new.lu)[3]<-"CLASS_LC2"
   area_lc1<-rbind(area_lc1,new.lu)
 } else if(n.lu1<n.lu2){
   diff.lu<-unique(data_merge_sel$ID_LC2)[is.na(match(unique(data_merge_sel$ID_LC2),unique(data_merge_sel$ID_LC1)))]
-  new.lu<-area_lc2[which(area_lc2$ID==diff.lu),]
+  new.lu<-area_lc2[area_lc2$ID %in% diff.lu, 1:3]
   new.lu$COUNT_LC2<-0
   colnames(new.lu)[2]<-"COUNT_LC1"
   colnames(new.lu)[3]<-"CLASS_LC1"
@@ -231,6 +231,8 @@ colnames(Ov_chg.melt)<-c("Land_use_type","LU_CODE", "Year", "Area")
 
 #create land use change map
 cross_temp<-crosstab(landuse1,landuse2)
+colnames(cross_temp)[1] = "Var1"
+colnames(cross_temp)[2] = "Var2"
 cross_temp$chkVar1<-as.numeric(is.na(cross_temp$Var1))
 cross_temp$chkVar2<-as.numeric(is.na(cross_temp$Var2))
 cross_temp$chkNull<-cross_temp$chkVar1+cross_temp$chkVar2
@@ -238,7 +240,7 @@ cross_temp <- cross_temp[ which(cross_temp$chkNull < 1),]
 cross_temp$Var1r<-as.numeric(cross_temp$Var1)
 cross_temp$Var2r<-as.numeric(cross_temp$Var2)
 cross_temp$ID<-as.factor(cross_temp$Var1r+(cross_temp$Var2r*100))
-colnames(cross_temp)[1] ="ID_LC1"
+colnames(cross_temp)[1] = "ID_LC1"
 colnames(cross_temp)[2] = "ID_LC2"
 colnames(cross_temp)[3] = "COUNT"
 colnames(lookup_l)[1]="ID_LC1"
