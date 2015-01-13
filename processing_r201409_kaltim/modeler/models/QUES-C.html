@@ -1,0 +1,82 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+<html>
+	<head>
+		<meta name="qrichtext" content="1" />
+		<!-- Style -->
+	   	<link rel="stylesheet" href="../../style.css" type="text/css">
+	</head>
+	<body>
+		<h2>QuES-C Modul</h2>
+    <p>Melakukan kuantifikasi perubahan cadangan carbon pada skala bentang lahan, yang bisa dikonversi menjadi besaran emisi dan besaran sekuestrasi dengan menggunakan metode Stock Difference</p>
+		<img src="QuESC_1.PNG" >
+    <img src="QuESC_1.PNG" >
+      
+      <h2>Parameter inpput</h2>
+     <ol>
+       <li>
+        <h3>Land use map-first time series and Land use map-second time series</h3>
+        <p>QUES-C melakukan analisa berdasarkan dua peta penutupan lahan seri waktu. Masukan datanya adalah peta tutupan lahan dalam format RASTER. Format data yang bisa digunakan adalah: GeoTiff (.tif), IMAGINE (.img), IDRISI Raster (.rst), GRID (.grd) dan ASCII raster (.asc).</p>       
+       </li>
+       <li>
+        <h3>Planning unit map</h3>
+        <p>Peta unit perencanaan dalam format RASTER. Format data yang bisa digunakan adalah: GeoTiff (.tif), IMAGINE (.img), IDRISI Raster (.rst), GRID (.grd) dan ASCII raster (.asc).</p>    
+       </li>
+       <li>
+        <h3>No Data value</h3>
+        <p>Kelas yang diberikan untuk No Data</p>    
+       </li>       
+       <li>
+        <h3>Carbon stock lookup table</h3>
+        <p>Tabel cadangan karbon untuk masing-masing tipe tutupan lahan. Format data yang bisa digunakan adalah CSV (.csv), TEXT file (.txt).</p>    
+       </li>       
+       <li>
+        <h3>Planning unit lookup table</h3>
+        <p>Tabel nama unit perencanaan dalam format RASTER. Format data yang bisa digunakan adalah CSV (.csv), TEXT file (.txt)</p>     
+       </li> 
+       <li>
+        <h3>Working directory</h3>
+        <p>Lokasi penyimpanan data hasil analisa QUES-C.</p>      
+       </li>       
+       <li>
+        <h3>Area Name</h3>
+        <p>Nama cakupan area yang akan dianalisa.</p>      
+       </li>           
+       <li>
+        <h3>Year of T1 and year of T2</h3>
+        <p>Waktu pengambilan data peta tutupan lahan seri waktu pertama dan kedua.</p>      
+       </li>        
+     </ol>
+
+    <h2>Hasil keluaran</h2>
+     <ol>
+       <li>
+        <h3>Carbon 1 & Carbon 2</h3>
+        <p>Keluaran berupa peta sebaran cadangan carbon pada area studi pada time series pertama dan kedua. Peta disimpan dalam format GeoTIFF(.tif)</p>       
+       </li>
+       <li>
+        <h3>Emission</h3>
+        <p>Peta unit perencanaan dalam format RASTER. Format data yang bisa digunakan adalah: GeoTiff (.tif), IMAGINE (.img), IDRISI Raster (.rst), GRID (.grd) dan ASCII raster (.asc).</p>    
+       </li>
+       <li>
+        <h3>Sequestration</h3>
+        <p>Tabel cadangan karbon untuk masing-masing tipe tutupan lahan. Format data yang bisa digunakan adalah CSV (.csv), TEXT file (.txt).</p>    
+       </li>        
+       <li>
+        <h3>Emission by zone</h3>
+        <p>Lokasi penyimpanan data hasil analisa QUES-C.</p>      
+       </li>       
+       <li>
+        <h3>Summary</h3>
+        <p>Nama cakupan area yang akan dianalisa.</p>      
+       </li>           
+       <li>
+        <h3>QuES-C Database</h3>
+        <p>Waktu pengambilan data peta tutupan lahan seri waktu pertama dan kedua.</p>      
+       </li>
+       <li>
+        <h3>QuES-C Summary Report</h3>
+        <p>Waktu pengambilan data peta tutupan lahan seri waktu pertama dan kedua.</p>      
+       </li>               
+     </ol>
+	</body>
+</html>

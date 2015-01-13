@@ -1,0 +1,25 @@
+NAME:projection_historical_baseline
+GROUP:[SCIENDO]
+PARAMETER:ParameterFile|FILE_WORKINGDIRECTORY|Working directory|True|True
+120.0,60.0
+PARAMETER:ParameterFile|FILE_QUESCDATABASE|QUES-C database|False|True
+340.0,60.0
+PARAMETER:ParameterNumber|NUMBER_BASEYEAROFT1|Base year of t1|0.0|3000.0|2010.0
+560.0,60.0
+PARAMETER:ParameterNumber|NUMBER_BASEYEAROFT2|Base year of t2|0.0|3000.0|2014.0
+780.0,60.0
+PARAMETER:ParameterNumber|NUMBER_ITERATION|Iteration|0.0|200.0|5.0
+1000.0,60.0
+ALGORITHM:r:projectionhistbaseline
+120.0,160.0
+None
+-1|FILE_WORKINGDIRECTORY
+-1|FILE_QUESCDATABASE
+-1|NUMBER_BASEYEAROFT1
+-1|NUMBER_BASEYEAROFT2
+-1|NUMBER_ITERATION
+Historical projection database|320.0,250.0
+Summary of historical projection|320.0,220.0
+Land use transition matrix at planning units|320.0,190.0
+Land use transition matrix overall|320.0,160.0
+Transition probability matrix|320.0,280.0

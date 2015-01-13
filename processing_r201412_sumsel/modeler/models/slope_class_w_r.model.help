@@ -1,0 +1,15 @@
+(dp0
+VFILE_LANDUSEMAPFIRSTTIMESERIES
+p1
+VQUES-C melakukan analisa berdasarkan dua peta penutupan lahan seri waktu. Masukan datanya adalah peta tutupan lahan dalam format RASTER. Format data yang bisa digunakan adalah: GeoTiff (.tif), IMAGINE (.img), IDRISI Raster (.rst), GRID (.grd) dan ASCII raster (.asc).
+p2
+sS'ALG_DESC'
+p3
+VQUES-C adalah modul bagian dari LUMENS (Land Use Planning for Multiple Environmental Services) yang berfungsi untuk melakukan kuantifikasi perubahan cadangan karbon pada skala bentang lahan.
+p4
+sVFILE_LANDUSEMAPSECONDTIMESERIES
+p5
+V
+p6
+sNg6
+s.
