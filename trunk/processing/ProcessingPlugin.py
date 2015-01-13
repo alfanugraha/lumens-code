@@ -115,7 +115,7 @@ class ProcessingPlugin:
         self.mPurMenu.addAction(self.mReconcileByAHPMenu)
 
         self.mReconcileAppend = QAction(QIcon(":/processing/images/reconcile.png"),
-             QCoreApplication.translate("PUR", "Append new planning unit"),
+             QCoreApplication.translate("PUR", "Add special planning unit"),
              interface.iface.mainWindow())
         self.mReconcileAppend.triggered.connect(self.openAppend)
         self.mPurMenu.addAction(self.mReconcileAppend)
@@ -156,10 +156,16 @@ class ProcessingPlugin:
         self.mQuesMenu.addMenu(self.mCarbonMenu)
         
         self.mCarbonQuesMenu = QAction(QIcon(":/processing/images/carbon.png"),
-             QCoreApplication.translate("QUES", "QUES-C Analysis"),
+             QCoreApplication.translate("QUES", "Carbon accounting"),
              interface.iface.mainWindow())
         self.mCarbonQuesMenu.triggered.connect(self.openCarbon)
-        self.mCarbonMenu.addAction(self.mCarbonQuesMenu)        
+        self.mCarbonMenu.addAction(self.mCarbonQuesMenu)       
+        
+        self.mCarbonInteractiveMenu = QAction(QIcon(":/processing/images/carbon.png"),
+             QCoreApplication.translate("QUES", "Interactive carbon accounting"),
+             interface.iface.mainWindow())
+        self.mCarbonInteractiveMenu.triggered.connect(self.openCarbonInteractive)
+        self.mCarbonMenu.addAction(self.mCarbonInteractiveMenu)   
 
 #         self.mCarbonStepMenu = QMenu(QCoreApplication.translate("QUES", "Step by step"))
 #         self.mCarbonMenu.addMenu(self.mCarbonStepMenu)
@@ -284,6 +290,12 @@ class ProcessingPlugin:
 		
         self.mOpcostSubMenu = QMenu(QCoreApplication.translate("TA", "Opportunity cost"))
         self.mTaMenu.addMenu(self.mOpcostSubMenu)  
+        
+        self.mAbacusOpCostMenu = QAction(QIcon(":/processing/images/ta.png"),
+             QCoreApplication.translate("TA", "Abacus opportunity cost curve"),
+             interface.iface.mainWindow())
+        self.mAbacusOpCostMenu.triggered.connect(self.openAbacusOpCost)
+        self.mOpcostSubMenu.addAction(self.mAbacusOpCostMenu) 
          
         self.mOpCostMenu = QAction(QIcon(":/processing/images/ta.png"),
              QCoreApplication.translate("TA", "Opportunity cost curve"),
@@ -353,6 +365,12 @@ class ProcessingPlugin:
              interface.iface.mainWindow()) 
         self.mScenarioMenu.triggered.connect(self.openScenario)
         self.mLEDSMenu.addAction(self.mScenarioMenu)
+        
+        self.mAbacusScenarioMenu = QAction(QIcon(":/processing/images/sciendo.png"),
+             QCoreApplication.translate("SCIENDO", "Abacus forward looking BAU projection"),
+             interface.iface.mainWindow()) 
+        self.mAbacusScenarioMenu.triggered.connect(self.openAbacusScenario)
+        self.mLEDSMenu.addAction(self.mAbacusScenarioMenu)
 
         self.mLUCModelingMenu = QMenu(QCoreApplication.translate("SCIENDO", "Land use change modeling"))
         self.mSciendoMenu.addMenu(self.mLUCModelingMenu)  
@@ -392,6 +410,12 @@ class ProcessingPlugin:
 
         self.mToolsMenu = QMenu(interface.iface.mainWindow())
         self.mToolsMenu.setTitle(QCoreApplication.translate("Tools", "Tools"))
+
+        self.mAbacusMenu = QAction(QIcon(":/processing/images/config.png"),
+             QCoreApplication.translate("Tools", "REDD Abacus SP"),
+             interface.iface.mainWindow())
+        self.mAbacusMenu.triggered.connect(self.openAbacus)
+        self.mToolsMenu.addAction(self.mAbacusMenu)  
 
         self.mLUTMenu = QAction(QIcon(":/processing/images/config.png"),
              QCoreApplication.translate("Tools", "Build lookup table"),
@@ -666,8 +690,8 @@ class ProcessingPlugin:
             dlg = ParametersDialog(self.alg)
             dlg.exec_()           
         except Exception, e:
-            QMessageBox.information(None,QCoreApplication.translate("PUR", "Generate slope"), \
-                QCoreApplication.translate("PUR","GRASS or R provider is not configured.\nPlease configure it before running this model."))  
+            QMessageBox.information(None,QCoreApplication.translate("Tools", "Generate slope"), \
+                QCoreApplication.translate("Tools","GRASS or R provider is not configured.\nPlease configure it before running this model."))  
             return          
 
     def openWatershedAnalysisModel(self):
@@ -700,8 +724,8 @@ class ProcessingPlugin:
             dlg = ParametersDialog(self.alg)
             dlg.exec_()
         except Exception, e:
-            QMessageBox.information(None,QCoreApplication.translate("PUR", "Calculate distance"), \
-                QCoreApplication.translate("PUR","GRASS provider is not configured.\nPlease configure it before running this model."))  
+            QMessageBox.information(None,QCoreApplication.translate("Tools", "Calculate distance"), \
+                QCoreApplication.translate("Tools","GRASS provider is not configured.\nPlease configure it before running this model."))  
             return     
 
     def openFixedDistanceBuffer(self):
@@ -715,6 +739,23 @@ class ProcessingPlugin:
         self.alg.provider = Providers.providers['qgis']
         dlg = ParametersDialog(self.alg)
         dlg.exec_()     
+
+    def openAbacus(self):
+        folder = \
+            os.path.join(os.path.dirname(ModelerAlgorithmProvider.__file__),
+                         'models')
+        f = os.path.join(folder, 'redd_abacus_sp.model')
+        try:
+            m = ModelerAlgorithm()
+            m.openModel(f)
+            self.alg = m
+            self.alg.provider = Providers.providers['model']
+            dlg = ParametersDialog(self.alg)
+            dlg.exec_()
+        except Exception, e:
+            QMessageBox.information(None,QCoreApplication.translate("Tools", "REDD Abacus SP"), \
+                QCoreApplication.translate("Tools","R provider is not configured.\nPlease configure it before running this model."))  
+            return     
 
     def openReclass(self):
         dlg = ReclassTable(interface.iface)
@@ -733,8 +774,8 @@ class ProcessingPlugin:
             dlg = ParametersDialog(self.alg)
             dlg.exec_()
         except Exception, e:
-            QMessageBox.information(None,QCoreApplication.translate("PUR", "Classify"), \
-                QCoreApplication.translate("PUR","R provider is not configured.\nPlease configure it before running this model."))  
+            QMessageBox.information(None,QCoreApplication.translate("Tools", "Classify"), \
+                QCoreApplication.translate("Tools","R provider is not configured.\nPlease configure it before running this model."))  
             return            
 
     def openCombineModel(self):
@@ -760,9 +801,9 @@ class ProcessingPlugin:
     def openCharacterize(self):
         layer = interface.iface.activeLayer()
         if layer == None or layer.type() != layer.VectorLayer:
-            QMessageBox.warning(interface.iface.mainWindow(), QCoreApplication.translate('PUR', 'Area Statistic'), QCoreApplication.translate('PUR', 'Please select a vector layer'))
+            QMessageBox.warning(interface.iface.mainWindow(), QCoreApplication.translate('Tools', 'Area Statistic'), QCoreApplication.translate('PUR', 'Please select a vector layer'))
         elif layer.isEditable():
-            QMessageBox.warning(interface.iface.mainWindow(), QCoreApplication.translate('PUR','Area Statistic'), QCoreApplication.translate('PUR','The selected layer is currently in editing mode.\nPlease exit this mode before managing the table.'))
+            QMessageBox.warning(interface.iface.mainWindow(), QCoreApplication.translate('Tools','Area Statistic'), QCoreApplication.translate('PUR','The selected layer is currently in editing mode.\nPlease exit this mode before managing the table.'))
         else:
 #         dlg = Characterize(interface.iface)
 #         dlg.exec_()
@@ -788,8 +829,8 @@ class ProcessingPlugin:
             dlg = ParametersDialog(self.alg)
             dlg.exec_()   
         except Exception, e:
-            QMessageBox.information(None,QCoreApplication.translate("PUR", "Cross tabulation"), \
-                QCoreApplication.translate("PUR","R provider is not configured.\nPlease configure it before running this model."))  
+            QMessageBox.information(None,QCoreApplication.translate("Tools", "Cross tabulation"), \
+                QCoreApplication.translate("Tools","R provider is not configured.\nPlease configure it before running this model."))  
             return         
 
     def openEditCrossTab(self):
@@ -809,8 +850,8 @@ class ProcessingPlugin:
             dlg = ParametersDialog(self.alg)
             dlg.exec_()   
         except Exception, e:
-            QMessageBox.information(None,QCoreApplication.translate("PUR", "Convert to raster"), \
-                QCoreApplication.translate("PUR","GRASS provider is not configured.\nPlease configure it before running this model."))  
+            QMessageBox.information(None,QCoreApplication.translate("Tools", "Convert to raster"), \
+                QCoreApplication.translate("Tools","GRASS provider is not configured.\nPlease configure it before running this model."))  
             return           
         
     def openLCC(self):
@@ -837,7 +878,7 @@ class ProcessingPlugin:
         folder = \
             os.path.join(os.path.dirname(ModelerAlgorithmProvider.__file__),
                          'models')
-        f = os.path.join(folder, 'PUR_add_sppu.model')
+        f = os.path.join(folder, 'PUR_add_special_planning_unit.model')
         try:
             m = ModelerAlgorithm()
             m.openModel(f)
@@ -881,9 +922,26 @@ class ProcessingPlugin:
             dlg = ParametersDialog(self.alg)
             dlg.exec_()
         except Exception, e:
-            QMessageBox.information(None,QCoreApplication.translate("QUES", "QUES-C Analysis"), \
+            QMessageBox.information(None,QCoreApplication.translate("QUES", "QUES-C"), \
                 QCoreApplication.translate("QUES","R provider is not configured.\nPlease configure it before running this model."))  
-            return                    
+            return     
+        
+    def openCarbonInteractive(self):
+        folder = \
+            os.path.join(os.path.dirname(ModelerAlgorithmProvider.__file__),
+                         'models')
+        f = os.path.join(folder, 'QUES-C_Interactive.model')
+        try:
+            m = ModelerAlgorithm()
+            m.openModel(f)
+            self.alg = m
+            self.alg.provider = Providers.providers['model']
+            dlg = ParametersDialog(self.alg)
+            dlg.exec_()
+        except Exception, e:
+            QMessageBox.information(None,QCoreApplication.translate("QUES", "QUES-C"), \
+                QCoreApplication.translate("QUES","R provider is not configured.\nPlease configure it before running this model."))  
+            return                
 
     def openGroupStats(self):
         dlg = GroupStatsDialog()
@@ -919,6 +977,23 @@ class ProcessingPlugin:
         except Exception, e:
             QMessageBox.information(None,QCoreApplication.translate("QUES", "QUES-B Analysis"), \
                 QCoreApplication.translate("QUES","R provider is not configured.\nPlease configure it before running this model."))  
+            return
+
+    def openAbacusOpCost(self):  
+        folder = \
+            os.path.join(os.path.dirname(ModelerAlgorithmProvider.__file__),
+                         'models')
+        f = os.path.join(folder, 'abacus_opportunity_cost.model')
+        try:
+            m = ModelerAlgorithm()
+            m.openModel(f)
+            self.alg = m
+            self.alg.provider = Providers.providers['model']
+            dlg = ParametersDialog(self.alg)
+            dlg.exec_()
+        except Exception, e:
+            QMessageBox.information(None,QCoreApplication.translate('TA','Opportunity cost'), \
+                QCoreApplication.translate('TA','R provider is not configured.\nPlease configure it before running this model.'))   
             return
 
     def openOpCost(self):  
@@ -972,6 +1047,23 @@ class ProcessingPlugin:
                 QCoreApplication.translate("SCIENDO","R provider is not configured.\nPlease configure it before running this model."))  
             return 
         
+    def openAbacusScenario(self):
+        folder = \
+            os.path.join(os.path.dirname(ModelerAlgorithmProvider.__file__),
+                         'models')
+        f = os.path.join(folder, 'abacus_projection_scenario.model')
+        try:
+            m = ModelerAlgorithm()
+            m.openModel(f)
+            self.alg = m
+            self.alg.provider = Providers.providers['model']
+            dlg = ParametersDialog(self.alg)
+            dlg.exec_()
+        except Exception, e:
+            QMessageBox.information(None,QCoreApplication.translate("SCIENDO", "Abacus forward looking BAU projection"), \
+                QCoreApplication.translate("SCIENDO","R provider is not configured.\nPlease configure it before running this model.")) 
+            return          
+
     def openScenario(self):
         folder = \
             os.path.join(os.path.dirname(ModelerAlgorithmProvider.__file__),
@@ -987,7 +1079,7 @@ class ProcessingPlugin:
         except Exception, e:
             QMessageBox.information(None,QCoreApplication.translate("SCIENDO", "Projection on Scenario"), \
                 QCoreApplication.translate("SCIENDO","R provider is not configured.\nPlease configure it before running this model.")) 
-            return          
+            return
 
     def openMolusce(self):
         d = MolusceDialog(interface.iface)
@@ -1100,7 +1192,7 @@ class ProcessingPlugin:
         folder = \
             os.path.join(os.path.dirname(ModelerAlgorithmProvider.__file__),
                          'models')
-        f = os.path.join(folder, 'PUR_reconcile_by_reference map.model')
+        f = os.path.join(folder, 'PUR_reconcile_by_reference_map.model')
         try:
             m = ModelerAlgorithm()
             m.openModel(f)

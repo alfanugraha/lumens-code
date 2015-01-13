@@ -1,0 +1,14 @@
+FILE(GLOB PY_FILES *.py)
+
+ADD_SUBDIRECTORY(area_analysis)
+ADD_SUBDIRECTORY(correlation)
+ADD_SUBDIRECTORY(crosstabs)
+ADD_SUBDIRECTORY(errorbudget)
+ADD_SUBDIRECTORY(lr)
+ADD_SUBDIRECTORY(mce)
+ADD_SUBDIRECTORY(mlp)
+ADD_SUBDIRECTORY(sampler)
+ADD_SUBDIRECTORY(simulator)
+ADD_SUBDIRECTORY(woe)
+
+PLUGIN_INSTALL(processing ./molusce/algorithms/models ${PY_FILES})
