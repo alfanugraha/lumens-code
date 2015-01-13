@@ -1,0 +1,47 @@
+<RCC>
+    <qresource prefix="/processing">
+        <file>images/pur.png</file>
+        <file>images/ques.png</file>
+        <file>images/sciendo.png</file>
+        <file>images/ta.png</file>
+        <file>images/lumens.png</file>
+        <file>images/results.png</file>
+        <file>images/build.png</file>
+        <file>images/reconcile.png</file>
+        <file>images/characterize.png</file>
+        <file>images/pre-ques.png</file>
+        <file>images/carbon.png</file>
+        <file>images/biodiversity.png</file>
+        <file>images/hydro.png</file>
+        <file>images/pos-ques.png</file>
+        <file>images/iterate.png</file>
+        <file>images/new.png</file>
+        <file>images/save.png</file>
+        <file>images/alg.png</file>
+        <file>images/commander.png</file>
+        <file>images/config.png</file>
+        <file>images/database.png</file>
+        <file>images/delete.png</file>
+        <file>images/edit.png</file>
+        <file>images/edithelp.png</file>
+        <file>images/geoserver.png</file>
+        <file>images/grass.png</file>
+        <file>images/history.gif</file>
+        <file>images/input.png</file>
+        <file>images/minus.gif</file>
+        <file>images/minus.png</file>
+        <file>images/model.png</file>
+        <file>images/otb.png</file>
+        <file>images/output.png</file>
+        <file>images/plus.gif</file>
+        <file>images/plus.png</file>
+        <file>images/postgis.png</file>
+        <file>images/qgis.png</file>
+        <file>images/r.png</file>
+        <file>images/runalgorithm.png</file>
+        <file>images/saga.png</file>
+        <file>images/script.png</file>
+        <file>images/taudem.png</file>
+        <file>images/tool.png</file>
+    </qresource>
+</RCC>

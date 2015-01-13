@@ -1,0 +1,8 @@
+NAME:Abacus Opportunity Cost Curve
+GROUP:[TA]
+PARAMETER:ParameterFile|FILE_ABACUSPROJECTFILE|Abacus Project File|False|True
+120.0,60.0
+ALGORITHM:r:abacusopportunitycost
+120.0,160.0
+None
+-1|FILE_ABACUSPROJECTFILE

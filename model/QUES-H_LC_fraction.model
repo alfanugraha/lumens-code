@@ -1,0 +1,29 @@
+NAME:Land Cover Fraction
+GROUP:[QUES]
+PARAMETER:ParameterFile|FILE_WORKINGDIRECTORY|Working Directory|True|True
+120.0,60.0
+PARAMETER:ParameterRaster|RASTERLAYER_LANDCOVER|Landcover|False
+340.0,60.0
+PARAMETER:ParameterRaster|RASTERLAYER_SUBCATCHMENT|Subcatchment|False
+560.0,60.0
+PARAMETER:ParameterNumber|NUMBER_PERIOD|Period|None|None|1990.0
+780.0,60.0
+PARAMETER:ParameterString|STRING_LOCATION|Location|Jayapura
+1000.0,60.0
+PARAMETER:ParameterFile|FILE_LANDCOVERLOOKUPTABLE|Land-cover lookup table|False|True
+1220.0,60.0
+VALUE:HARDCODEDPARAMVALUE_period1_0===1990.0
+ALGORITHM:r:queshlcfraction
+120.0,160.0
+None
+-1|FILE_WORKINGDIRECTORY
+-1|RASTERLAYER_LANDCOVER
+-1|FILE_WORKINGDIRECTORY
+-1|RASTERLAYER_SUBCATCHMENT
+-1|HARDCODEDPARAMVALUE_period1_0
+-1|STRING_LOCATION
+Fraction of landcover each sub-catchment|521.0,219.0
+Fraction of landcover all-over catchment|380.0,254.0
+Landcover inside catchment|330.0,188.0
+Subcatchment|447.0,269.0
+Catchment|358.0,333.0

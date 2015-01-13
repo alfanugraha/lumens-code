@@ -1,13 +1,15 @@
 ##[TA]=group
 ##working_directory=folder
-##landuse1=file
-##landuse2=file
-##zone=file
+##landuse1=raster
+##landuse2=raster
+##zone=raster
 ##periode1=number 2010
 ##periode2=number 2015
 ##location=string
 ##carbon_lookup=file
 ##zone_lookup=file
+##npv_lookup=file
+##passfilenames
 
 library(R2HTML)
 library(raster)
@@ -38,30 +40,80 @@ landuse1 <- raster(landuse1)
 landuse2 <- raster(landuse2)
 zone <- raster(zone)
 
+# Projection and Extend Handling
+if (grepl("+units=m", as.character(landuse1@crs))){
+print("Raster maps have projection in meter unit")
+Spat_res<-res(landuse1)[1]*res(landuse1)[2]/10000
+paste("Raster maps have ", Spat_res, " Ha spatial resolution, QuES-C will automatically generate data in Ha unit")
+} else if (grepl("+proj=longlat", as.character(landuse1@crs))){
+print("Raster maps have projection in degree unit")
+Spat_res<-res(landuse1)[1]*res(landuse1)[2]*(111319.9^2)/10000
+paste("Raster maps have ", Spat_res, " Ha spatial resolution, QuES-C will automatically generate data in Ha unit")
+} else{
+stop("Raster map projection is unknown")
+}
 
-#set same extent
+#Extent handling and raster resolution land-cover maps
+if (as.character(landuse1@crs)==as.character(landuse2@crs)){
+print("Raster map time series 1 and 2 have the same projection")
+if (res(landuse1)[1]==res(landuse2)[1]){
+print("Raster map time series 1 and 2 have the same resolution")
+if (landuse1@extent==landuse2@extent){
+print("Raster map time series 1 and 2 have the same extent")
+} else {
+print("Raster map time series 1 and 2 don't have the same extent, synchronising land-cover map...")
 landuse2<-spatial_sync_raster(landuse2, landuse1, method = "ngb")
-zone<-spatial_sync_raster(zone, landuse1, method = "ngb")
+}
+} else{
+print("Raster map time series 1 and 2 don't have the same resolution, synchronising land-cover map...")
+landuse2<-spatial_sync_raster(landuse2, landuse1, method = "ngb")
+}
+} else{
+print("Raster map time series 1 and 2 don't have the same projection, synchronising land-cover map...")
+landuse2<-spatial_sync_raster(landuse2, landuse1, method = "ngb")
+}
 
+
+# Extent handling and raster resolution land-cover maps
+if (as.character(landuse1@crs)==as.character(zone@crs)){
+print("Raster map time series 1 and 2 have the same projection")
+if (res(landuse1)[1]==res(zone)[1]){
+print("Raster map time series 1 and 2 have the same resolution")
+if (landuse1@extent==zone@extent){
+print("Raster map time series 1 and 2 have the same extent")
+} else {
+print("Raster map time series 1 and 2 don't have the same extent, synchronising land-cover map...")
+zone<-spatial_sync_raster(zone, landuse1, method = "ngb")
+}
+} else{
+print("Raster map time series 1 and 2 don't have the same resolution, synchronising land-cover map...")
+zone<-spatial_sync_raster(zone, landuse1, method = "ngb")
+}
+} else{
+print("Raster map time series 1 and 2 don't have the same projection, synchronising land-cover map...")
+zone<-spatial_sync_raster(zone, landuse1, method = "ngb")
+}
 
 # load look up tables
 lookup_c<- read.table(carbon_lookup, header=TRUE, sep=",",)
-#lookup_n <- read.table("c:/Bungo/tbl/NPV.csv", header=TRUE, sep=",",)
+lookup_n <- read.table(npv_lookup, header=TRUE, sep=",",)
 lookup_z <- read.table(zone_lookup, header=TRUE, sep=",",)
 
+# create categorical raster using ratify function
+landuse1<-ratify(landuse1, filename='landuse1.grd',count=TRUE,overwrite=TRUE)
+landuse2<-ratify(landuse2, filename='landuse2.grd',count=TRUE,overwrite=TRUE)
+zone<-ratify(zone, filename='zone.grd',count=TRUE,overwrite=TRUE)
 
 #ZONE
-rat_zone<-ratify(zone, filename='zone.grd',count=TRUE,overwrite=TRUE)
 colnames(lookup_z)<-c("ID", "ZONE")
-zone_lookup<-merge(levels(rat_zone),lookup_z, by="ID")
+zone_lookup<-merge(levels(zone),lookup_z, by="ID")
 zone_lookup$Rowid<-NULL
 
-ratzone<- levels(rat_zone)[[1]]
+ratzone<- levels(zone)[[1]]
 ratzone$zone<-zone_lookup$ZONE
 zone_pl<-zone ; #separating file only for plotting
 levels(zone_pl) <- ratzone
 #levelplot(zone_pl, col.regions=rainbow)
-
 
 # set proj prop
 title=location
@@ -74,11 +126,6 @@ proj_prop$period1<-period1
 proj_prop$period2<-period2
 proj_prop$period <- do.call(paste, c(proj_prop[c("period1", "period2")], sep = " - "))
 
-# create categorical raster using ratify function
-landuse1<-ratify(landuse1, filename='landuse1.grd',count=TRUE,overwrite=TRUE)
-landuse2<-ratify(landuse2, filename='landuse2.grd',count=TRUE,overwrite=TRUE)
-zone<-ratify(zone, filename='ratify.grd',count=TRUE,overwrite=TRUE)
-
 # create raster attribute table usign land cover file look up table
 area_lc1<-as.data.frame(levels(landuse1))
 area_lc2<-as.data.frame(levels(landuse2))
@@ -88,6 +135,9 @@ area<-sum(area_zone$COUNT)
 #create carbon density maps
 levels(landuse1)<-merge((levels(landuse1)),lookup_c,by="ID")
 levels(landuse2)<-merge((levels(landuse2)),lookup_c,by="ID")
+lookup_n$CLASS<-NULL
+levels(landuse1)<-merge((levels(landuse1)),lookup_n,by="ID")
+levels(landuse2)<-merge((levels(landuse2)),lookup_n,by="ID")
 levels(zone) <- merge(area_zone,lookup_z,by="ID")
 area_lc1<-as.data.frame(levels(landuse1))
 area_lc2<-as.data.frame(levels(landuse2))
@@ -99,7 +149,6 @@ carbon1 <- deratify(landuse1,'CARBON')
 carbon2 <- deratify(landuse2,'CARBON')
 npv1<-deratify(landuse1,'NPV')
 npv2<-deratify(landuse2,'NPV')
-
 
 #create emission and sequestration map
 chk_em<-carbon1>carbon2
@@ -177,13 +226,10 @@ addParagraph(rtffile, "\\b\\fs20 Figure 9. NPV change map t1-t2\\b0\\fs20.")
 addNewLine(rtffile)
 addParagraph(rtffile, chapter3)
 addNewLine(rtffile)
-C10 <- plot(opcost)
+C10 <-gplot(opcost) + geom_tile(aes(fill = value)) + scale_fill_gradient(low = 'white', high = 'blue') + coord_equal()
 addPlot(rtffile, plot.fun=print, width=6, height=5, res=300, C10 )
 addParagraph(rtffile, "\\b\\fs20 Figure 10. Opcost map t1-t2\\b0\\fs20.")
 addNewLine(rtffile)
 
 done(rtffile)
-
-
-
 

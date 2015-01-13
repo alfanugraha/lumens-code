@@ -1,0 +1,250 @@
+pyuic4 -x lumensapp.ui -o lumensapp.py
+pyrcc4 ../images/images.qrc -o images_rc.py
+
+
+library (DBI)
+library (R2HTML)
+library (HTMLUtils)
+library (raster)
+library (rgdal) 
+library (RSQLite)
+library (SDMTools)
+library (sp)
+library (tiff)
+library(rasterVis)
+library(reshape2)
+library(plyr)
+library(lattice)
+library(latticeExtra)
+library(RColorBrewer)
+library(hexbin)
+library(grid) - 
+library(ggplot2)
+library(R2wd)
+library(foreign)
+library(RDCOMClient) - deprecated RCOM
+library(RServe)
+library(rgeos)
+library(pracma)
+library(zoo) - 
+library(stringr) - 
+
+edit molusce/algorithms/models/crosstabs/manager.py:91
+test running b, r, c
+cek resource_rc
+bikin reconcile versi 1 dialog, dan 2 dialog
+
+
+
+update R v3
+edit combine with input dialog box for planning unit
+delete reconcile - priority table
+reconcile - manual using table manager with spesification: 
+	new field for reconcile, 
+	edit cell, 
+	reconcile button, 
+	remove other field that not reconciled
+	save table and cell, 
+characterize using open attribute table or multiedit
+pre-ques get input & area-changes from molusce
+ 
+
+customization default harus ada
+ganti nama qgis jadi lumens
+
+
+Number of Data Layers
+Statistic
+
+## Not run: 
+## To write a CSV file for input to Excel one might use
+x <- data.frame(a = I("a \" quote"), b = pi)
+write.table(x, file = "foo.csv", sep = ",", col.names = NA,
+            qmethod = "double")
+## and to read this file back into R one needs
+read.table("foo.csv", header = TRUE, sep = ",", row.names = 1)
+## NB: you do need to specify a separator if qmethod = "double".
+
+### Alternatively
+write.csv(x, file = "foo.csv")
+read.csv("foo.csv", row.names = 1)
+## End(Not run)
+
+
+tambah button reconcile di attribute table
+edit QTableWidget di Statistics #done
+bikin installer
+blajar cara stepbystep QUES-C
+bikin output QUES-C #done
+otak-atik R-Fragstats-SQLite untuk QUES-B #done
+fungsi untuk generate csv file 
+bikin log buat reconcile-query
+bikin help #done
+
+http://hub.qgis.org/wiki/quantum-gis/Building_QGIS_from_Source
+error while loading shared libraries: libqgis_core.so.1.8.0: cannot open shared object file: No such file or directory
+If you have this error while loading a compiled qgis, you can try this:
+# get the full lib path, for example "/home/myusername/src/qgis/Quantum-GIS/build/lib/" (no wildcard ~)
+# copy this path to a new file /etc/ld.so.conf.d/qgis.conf (on Ubuntu distribution. This can change a bit)
+sudo su
+echo "/home/myusername/src/qgis/Quantum-GIS/build/lib/" > /etc/ld.so.conf.d/qgis.conf
+exit
+# ldconfig
+sudo ldconfig
+# verify with ldd
+ldd /home/myusername/src/qgis/Quantum-GIS/build/bin/qgis | grep "libqgis" 
+
+
+- Clip raster by mask layer (GDAL)
+- Fixed distance buffer (QGIS-Core)
+- Variable distance buffer (QGIS-Core)
+
+
+mActionAddDelimitedText-
+mActionAddMssqlLayer-
+mActionAddOgrLayer-
+mActionAddOracleLayer-
+mActionAddPostgisLayer-
+mActionAddRasterLayer-
+mActionAddSpatiaLiteLayer-
+mActionAddWcsLayer-
+mActionAddWfsLayer-
+mActionAddWmsLayer-
+mActionAllEdits
+mActionCancelAllEdits
+mActionCancelEdits
+mActionComposerManager
+mActionDecreaseBrightness
+mActionDecreaseContrast
+mActionDeleteSelected
+mActionDeselectAll
+mActionDraw
+mActionDuplicateComposer
+mActionDuplicateLayer
+mActionFileOpen
+mActionFileSave
+mActionFileSaveAs
+mActionHelpContents
+mActionIdentify
+mActionIncreaseBrightness
+mActionIncreaseContrast
+mActionInOverview
+mActionNewComposer
+mActionNewSpatiaLiteLayer
+mActionNewVectorLayer
+mActionOptions
+mActionPan
+mActionPanToSelected
+mActionPinLabels
+mActionRemoveAllFromOverview
+mActionRemoveLayer
+mActionRollbackAllEdits
+mActionRollbackEdits
+mActionSaveAllEdits
+mActionSaveEdits
+mActionSelect
+mActionSelectFreehand
+mActionSelectPolygon
+mActionSelectRadius
+mActionSelectRectangle
+mActionSetProjection
+mActionShowHideLabels
+mActionShowPinnedLabels
+mActionShowPluginManager
+mActionWhatsThis
+mActionZoomActual
+mActionZoomFullExtent
+mActionZoomIn
+mActionZoomLast
+mActionZoomNext
+mActionZoomOut
+mActionZoomToLayer
+mActionZoomToSelected
+mIconAutoPlacementSettings
+mIconDataDefine
+mIconDataDefineError
+mIconDataDefineExpression
+mIconDataDefineExpressionError
+mIconDataDefineExpressionOn
+mIconDataDefineOn
+mIconDeselected
+mIconExpression
+mIconExpressionEditorOpen
+mIconExpressionFilter
+mIconExpressionPreview
+mIconExpressionSelect
+mIconLabelQuadrantCenter
+mIconLabelQuadrantOffset
+mIconLineLayer
+mIconMssql
+mIconOracle
+mIconOws
+mIconPointLayer
+mIconPolygonLayer
+mIconPostgis
+mIconProperties
+mIconRaster
+mIconRasterLayer
+mIconSelectAdd
+mIconSelected
+mIconSelectIntersect
+mIconSelectRemove
+mIconSpatialite
+mIconWcs
+mIconWfs
+mIconWms
+mIconZoom
+zoomMaster
+selectTools
+mActionAddAllToOverview
+mAction
+
+svn perlu central server, jadi kalau server down kita ga bisa apa2.
+kalau git ga perlu central server, jadi lebih mudah share code apapun di repo. git paling populer dan sederhana
+GIT 4 stack:
+1. commit
+	git push <- kalo ada perubahan
+2. index
+3. working tree
+4. untracked files
+git checkout HEAD
+git checkout -- anu.txt
+nano anu.txt
+git add anu.txt
+git rebase --continue
+
+git fetch
+git tag
+
+
+sample data,proses instalasi frg, R&package, LUMENS panjang. selamat jambi jadi user yang nyoba lumens versi beta
+ingat nama2 ikon, banyaknya menu, interface, bahasa, path non space
+akan banyak proses dan step2 yang harus diingat jadi jgn segan untuk bertanya
+step pur lebih panjang
+
+
+edit osgeo4w/unpacked/etc/postinstall && preremove qgis.bat, msys.bat, grass64.bat, shell.bat
+edit nsi file, ganti icon splash, enable and set customization, hide tips
+
+
+BUGS from JAMBI Training:
+1.  Compatibility
+2.  Customization unchecked
+3.  Raster properties like ArcGIS
+4.  Crash minidump on start QGIS
+5.  Default position layer properties
+6.  setting R, set x64
+7.  Histogram gak muncul
+8.  error executing algorithm 2 'NoneType'
+9.  UAC install package R
+10. Grass error
+11. Column name attribute table
+12. QUES-B x86_64, x32, x64, x86_32 
+13. statconnDCOM version compatibility
+14. QUES-C dua kali mati
+15. comma 
+16. rcom -> rtf
+17. create undo from history like compose manager
+
+
+

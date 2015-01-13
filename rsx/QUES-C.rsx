@@ -48,61 +48,61 @@ time_start<-paste(eval(parse(text=(paste("Sys.time ()")))), sep="")
 setwd(working_directory)
 
 #====Load Datasets====
-landuse1 <- raster(landuse1) 
+landuse1 <- raster(landuse1)
 landuse2 <- raster(landuse2)
 zone <- raster(zone)
 
 #====Projection and Extend Handling====
 if (grepl("+units=m", as.character(landuse1@crs))){
-  print("Raster maps have projection in meter unit")
-  Spat_res<-res(landuse1)[1]*res(landuse1)[2]/10000
-  paste("Raster maps have ", Spat_res, " Ha spatial resolution, QuES-C will automatically generate data in Ha unit")
+print("Raster maps have projection in meter unit")
+Spat_res<-res(landuse1)[1]*res(landuse1)[2]/10000
+paste("Raster maps have ", Spat_res, " Ha spatial resolution, QuES-C will automatically generate data in Ha unit")
 } else if (grepl("+proj=longlat", as.character(landuse1@crs))){
-  print("Raster maps have projection in degree unit")
-  Spat_res<-res(landuse1)[1]*res(landuse1)[2]*(111319.9^2)/10000
-  paste("Raster maps have ", Spat_res, " Ha spatial resolution, QuES-C will automatically generate data in Ha unit")
+print("Raster maps have projection in degree unit")
+Spat_res<-res(landuse1)[1]*res(landuse1)[2]*(111319.9^2)/10000
+paste("Raster maps have ", Spat_res, " Ha spatial resolution, QuES-C will automatically generate data in Ha unit")
 } else{
-  stop("Raster map projection is unknown")
+stop("Raster map projection is unknown")
 }
 
 #Extent handling and raster resolution land-cover maps
-if (as.character(landuse1@crs)==as.character(landuse2@crs)){ 
-  print("Raster map time series 1 and 2 have the same projection")
-  if (res(landuse1)[1]==res(landuse2)[1]){
-    print("Raster map time series 1 and 2 have the same resolution")
-    if (landuse1@extent==landuse2@extent){
-      print("Raster map time series 1 and 2 have the same extent")
-    } else {
-      print("Raster map time series 1 and 2 don't have the same extent, synchronising land-cover map...")
-      landuse2<-spatial_sync_raster(landuse2, landuse1, method = "ngb")
-    }
-  } else{
-    print("Raster map time series 1 and 2 don't have the same resolution, synchronising land-cover map...")
-    landuse2<-spatial_sync_raster(landuse2, landuse1, method = "ngb")
-  }
+if (as.character(landuse1@crs)==as.character(landuse2@crs)){
+print("Raster map time series 1 and 2 have the same projection")
+if (res(landuse1)[1]==res(landuse2)[1]){
+print("Raster map time series 1 and 2 have the same resolution")
+if (landuse1@extent==landuse2@extent){
+print("Raster map time series 1 and 2 have the same extent")
+} else {
+print("Raster map time series 1 and 2 don't have the same extent, synchronising land-cover map...")
+landuse2<-spatial_sync_raster(landuse2, landuse1, method = "ngb")
+}
 } else{
-  print("Raster map time series 1 and 2 don't have the same projection, synchronising land-cover map...")
-  landuse2<-spatial_sync_raster(landuse2, landuse1, method = "ngb")
+print("Raster map time series 1 and 2 don't have the same resolution, synchronising land-cover map...")
+landuse2<-spatial_sync_raster(landuse2, landuse1, method = "ngb")
+}
+} else{
+print("Raster map time series 1 and 2 don't have the same projection, synchronising land-cover map...")
+landuse2<-spatial_sync_raster(landuse2, landuse1, method = "ngb")
 }
 
 # Extent handling and raster resolution land-cover maps
 if (as.character(landuse1@crs)==as.character(zone@crs)){
-  print("Raster map time series 1 and 2 have the same projection")
-  if (res(landuse1)[1]==res(zone)[1]){
-    print("Raster map time series 1 and 2 have the same resolution")
-    if (landuse1@extent==zone@extent){
-      print("Raster map time series 1 and 2 have the same extent")
-    } else {
-      print("Raster map time series 1 and 2 don't have the same extent, synchronising land-cover map...")
-      zone<-spatial_sync_raster(zone, landuse1, method = "ngb")
-    }
-  } else{
-    print("Raster map time series 1 and 2 don't have the same resolution, synchronising land-cover map...")
-    zone<-spatial_sync_raster(zone, landuse1, method = "ngb")
-  }
+print("Raster map time series 1 and 2 have the same projection")
+if (res(landuse1)[1]==res(zone)[1]){
+print("Raster map time series 1 and 2 have the same resolution")
+if (landuse1@extent==zone@extent){
+print("Raster map time series 1 and 2 have the same extent")
+} else {
+print("Raster map time series 1 and 2 don't have the same extent, synchronising land-cover map...")
+zone<-spatial_sync_raster(zone, landuse1, method = "ngb")
+}
 } else{
-  print("Raster map time series 1 and 2 don't have the same projection, synchronising land-cover map...")
-  zone<-spatial_sync_raster(zone, landuse1, method = "ngb")
+print("Raster map time series 1 and 2 don't have the same resolution, synchronising land-cover map...")
+zone<-spatial_sync_raster(zone, landuse1, method = "ngb")
+}
+} else{
+print("Raster map time series 1 and 2 don't have the same projection, synchronising land-cover map...")
+zone<-spatial_sync_raster(zone, landuse1, method = "ngb")
 }
 
 #====Load Lookup Tables====
@@ -125,7 +125,7 @@ proj_prop$period <- do.call(paste, c(proj_prop[c("period1", "period2")], sep = "
 
 #====Carbon Accounting Process====
 NAvalue(landuse1)<-nodata
-NAvalue(landuse2)<-nodata 
+NAvalue(landuse2)<-nodata
 rcl.m.c1<-as.matrix(lookup_c[,1])
 rcl.m.c2<-as.matrix(lookup_c[,3])
 rcl.m<-cbind(rcl.m.c1,rcl.m.c2)
@@ -211,12 +211,12 @@ zone_lookup<-area_zone
 data_zone<-area_zone
 data_zone$Z_CODE<-toupper(abbreviate(data_zone$Z_NAME))
 for(a in 1:lg){
-  i<-unique(data_merge$ZONE)[a]
-  data_z<-data_merge[which(data_merge$ZONE == i),]
-  data_zone$Avg_C_t1[which(data_zone$ID == i)]<-sum(data_z$CARBON_t1*data_z$COUNT)/sum(data_z$COUNT)
-  data_zone$Avg_C_t2[which(data_zone$ID == i)]<-sum(data_z$CARBON_t2*data_z$COUNT)/sum(data_z$COUNT)
-  data_zone$Rate_em[which(data_zone$ID == i)]<-sum(data_z$em)/(sum(data_z$COUNT)*period)
-  data_zone$Rate_seq[which(data_zone$ID == i)]<-sum(data_z$sq)/(sum(data_z$COUNT)*period)
+i<-unique(data_merge$ZONE)[a]
+data_z<-data_merge[which(data_merge$ZONE == i),]
+data_zone$Avg_C_t1[which(data_zone$ID == i)]<-sum(data_z$CARBON_t1*data_z$COUNT)/sum(data_z$COUNT)
+data_zone$Avg_C_t2[which(data_zone$ID == i)]<-sum(data_z$CARBON_t2*data_z$COUNT)/sum(data_z$COUNT)
+data_zone$Rate_em[which(data_zone$ID == i)]<-sum(data_z$em)/(sum(data_z$COUNT)*period)
+data_zone$Rate_seq[which(data_zone$ID == i)]<-sum(data_z$sq)/(sum(data_z$COUNT)*period)
 }
 data_zone[,5:8]<-round(data_zone[,5:8],digits=3)
 
@@ -238,17 +238,17 @@ tb_em_total_10<-head(tb_em_total,n=10)
 #====Zonal Emission====
 tb_em_zonal<-as.data.frame(NULL)
 for (i in 1:length(zone_lookup$ID)){
-  a<-(zone_lookup$ID)[i]
-  tb_em<-as.data.frame(cbind(order_em$ZONE, order_em$LU_CHG, as.data.frame(round(order_em$em, digits=3))))
-  colnames(tb_em)<-c("ZONE","LU_CHG", "em")
-  tb_em_z<-as.data.frame(tb_em[which(tb_em$ZONE == a),])
-  tb_em_z<-aggregate(em~ZONE+LU_CHG,data=tb_em_z,FUN=sum)
-  tb_em_z$LU_CODE<-as.factor(toupper(abbreviate(tb_em_z$LU_CHG, minlength=5, strict=FALSE, method="both")))
-  tb_em_z<-tb_em_z[order(-tb_em_z$em),]
-  tb_em_z<-tb_em_z[c(1,4,2,3)]
-  tb_em_z$Percentage<-as.numeric(format(round((tb_em_z$em / sum(tb_em_z$em) * 100),2), nsmall=2))
-  tb_em_z_10<-head(tb_em_z,n=10)
-  tb_em_zonal<-rbind(tb_em_zonal,tb_em_z_10)
+a<-(zone_lookup$ID)[i]
+tb_em<-as.data.frame(cbind(order_em$ZONE, order_em$LU_CHG, as.data.frame(round(order_em$em, digits=3))))
+colnames(tb_em)<-c("ZONE","LU_CHG", "em")
+tb_em_z<-as.data.frame(tb_em[which(tb_em$ZONE == a),])
+tb_em_z<-aggregate(em~ZONE+LU_CHG,data=tb_em_z,FUN=sum)
+tb_em_z$LU_CODE<-as.factor(toupper(abbreviate(tb_em_z$LU_CHG, minlength=5, strict=FALSE, method="both")))
+tb_em_z<-tb_em_z[order(-tb_em_z$em),]
+tb_em_z<-tb_em_z[c(1,4,2,3)]
+tb_em_z$Percentage<-as.numeric(format(round((tb_em_z$em / sum(tb_em_z$em) * 100),2), nsmall=2))
+tb_em_z_10<-head(tb_em_z,n=10)
+tb_em_zonal<-rbind(tb_em_zonal,tb_em_z_10)
 }
 rm(tb_em, tb_em_total, tb_em_z, tb_em_z_10)
 
@@ -265,51 +265,51 @@ tb_seq_total_10<-head(tb_seq_total,n=10)
 #====Zonal Sequestration====
 tb_seq_zonal<-as.data.frame(NULL)
 for (i in 1:length(zone_lookup$ID)){
-  a<-(zone_lookup$ID)[i]
-  tb_seq<-as.data.frame(cbind(order_sq$ZONE, order_sq$LU_CHG, as.data.frame(round(order_sq$sq, digits=3))))
-  colnames(tb_seq)<-c("ZONE","LU_CHG", "seq")
-  tb_seq_z<-as.data.frame(tb_seq[which(tb_seq$ZONE == i),])
-  tb_seq_z<-aggregate(seq~ZONE+LU_CHG,data=tb_seq_z,FUN=sum)
-  tb_seq_z$LU_CODE<-as.factor(toupper(abbreviate(tb_seq_z$LU_CHG, minlength=5, strict=FALSE, method="both")))
-  tb_seq_z<-tb_seq_z[order(-tb_seq_z$seq),]
-  tb_seq_z<-tb_seq_z[c(1,4,2,3)]
-  tb_seq_z$Percentage<-as.numeric(format(round((tb_seq_z$seq / sum(tb_seq_z$seq) * 100),2), nsmall=2))
-  tb_seq_z_10<-head(tb_seq_z,n=10)
-  tb_seq_zonal<-rbind(tb_seq_zonal,tb_seq_z_10)
+a<-(zone_lookup$ID)[i]
+tb_seq<-as.data.frame(cbind(order_sq$ZONE, order_sq$LU_CHG, as.data.frame(round(order_sq$sq, digits=3))))
+colnames(tb_seq)<-c("ZONE","LU_CHG", "seq")
+tb_seq_z<-as.data.frame(tb_seq[which(tb_seq$ZONE == i),])
+tb_seq_z<-aggregate(seq~ZONE+LU_CHG,data=tb_seq_z,FUN=sum)
+tb_seq_z$LU_CODE<-as.factor(toupper(abbreviate(tb_seq_z$LU_CHG, minlength=5, strict=FALSE, method="both")))
+tb_seq_z<-tb_seq_z[order(-tb_seq_z$seq),]
+tb_seq_z<-tb_seq_z[c(1,4,2,3)]
+tb_seq_z$Percentage<-as.numeric(format(round((tb_seq_z$seq / sum(tb_seq_z$seq) * 100),2), nsmall=2))
+tb_seq_z_10<-head(tb_seq_z,n=10)
+tb_seq_zonal<-rbind(tb_seq_zonal,tb_seq_z_10)
 }
 rm(tb_seq, tb_seq_total, tb_seq_z, tb_seq_z_10)
 
 #====Zonal Additional Statistics====
 if (((length(unique(data_merge$ID_LC1)))>(length(unique(data_merge$ID_LC2))))){
-  dimention<-length(unique(data_merge$ID_LC1))
-  name.matrix<-cbind(as.data.frame(data_merge$ID_LC1), as.data.frame(data_merge$LC_t1))
-  name.matrix<-unique(name.matrix)
-  colnames(name.matrix)<-c("ID","LC")
-  name.matrix<-name.matrix[order(name.matrix$ID),]
-  name.matrix$LC_CODE<-toupper(abbreviate(name.matrix$LC, minlength=4, method="both"))
+dimention<-length(unique(data_merge$ID_LC1))
+name.matrix<-cbind(as.data.frame(data_merge$ID_LC1), as.data.frame(data_merge$LC_t1))
+name.matrix<-unique(name.matrix)
+colnames(name.matrix)<-c("ID","LC")
+name.matrix<-name.matrix[order(name.matrix$ID),]
+name.matrix$LC_CODE<-toupper(abbreviate(name.matrix$LC, minlength=4, method="both"))
 } else{
-  dimention<-length(unique(data_merge$ID_LC2))
-  name.matrix<-cbind(as.data.frame(data_merge$ID_LC2), as.data.frame(data_merge$LC_t2))
-  name.matrix<-unique(name.matrix)
-  colnames(name.matrix)<-c("ID","LC")
-  name.matrix<-name.matrix[order(name.matrix$ID),]
-  name.matrix$LC_CODE<-toupper(abbreviate(name.matrix$LC, minlength=4, method="both"))
+dimention<-length(unique(data_merge$ID_LC2))
+name.matrix<-cbind(as.data.frame(data_merge$ID_LC2), as.data.frame(data_merge$LC_t2))
+name.matrix<-unique(name.matrix)
+colnames(name.matrix)<-c("ID","LC")
+name.matrix<-name.matrix[order(name.matrix$ID),]
+name.matrix$LC_CODE<-toupper(abbreviate(name.matrix$LC, minlength=4, method="both"))
 }
 
 #====Zonal Emission matrix====
 e.m.z<-matrix(0, nrow=dimention, ncol=dimention)
 em.matrix.zonal<-as.data.frame(NULL)
 for (k in 1:length(zone_lookup$ID)){
-  for (i in 1:nrow(e.m.z)){
-    for (j in 1:ncol(e.m.z)){
-      em.data<-data_merge_sel[which(data_merge_sel$ID_LC1==i & data_merge_sel$ID_LC2==j & data_merge_sel$ZONE==k),]
-      e.m.z[i,j]<-as.numeric(round(sum(em.data$em), 2))
-    }
-  }
-  e.m.z<-as.data.frame(e.m.z)
-  e.m.z.c<-as.data.frame(cbind(name.matrix$LC_CODE,e.m.z))
-  e.m.z.c<-cbind(rep(k,nrow(e.m.z)),e.m.z.c)
-  em.matrix.zonal<-rbind(em.matrix.zonal,e.m.z.c)
+for (i in 1:nrow(e.m.z)){
+for (j in 1:ncol(e.m.z)){
+em.data<-data_merge_sel[which(data_merge_sel$ID_LC1==i & data_merge_sel$ID_LC2==j & data_merge_sel$ZONE==k),]
+e.m.z[i,j]<-as.numeric(round(sum(em.data$em), 2))
+}
+}
+e.m.z<-as.data.frame(e.m.z)
+e.m.z.c<-as.data.frame(cbind(name.matrix$LC_CODE,e.m.z))
+e.m.z.c<-cbind(rep(k,nrow(e.m.z)),e.m.z.c)
+em.matrix.zonal<-rbind(em.matrix.zonal,e.m.z.c)
 }
 colnames(em.matrix.zonal)<-c("ZONE","LC_CODE",as.vector(name.matrix$LC_CODE))
 rm(em.data, e.m.z, e.m.z.c)
@@ -318,10 +318,10 @@ rm(em.data, e.m.z, e.m.z.c)
 #====Total Emission matrix====
 e.m<-matrix(0, nrow=dimention, ncol=dimention)
 for (i in 1:nrow(e.m)){
-  for (j in 1:ncol(e.m)){
-    em.data<-data_merge_sel[which(data_merge_sel$ID_LC1==i & data_merge_sel$ID_LC2==j),]
-    e.m[i,j]<-round(sum(em.data$em), digits=2)
-  }
+for (j in 1:ncol(e.m)){
+em.data<-data_merge_sel[which(data_merge_sel$ID_LC1==i & data_merge_sel$ID_LC2==j),]
+e.m[i,j]<-round(sum(em.data$em), digits=2)
+}
 }
 e.m<-as.data.frame(e.m)
 em.matrix.total<-as.data.frame(cbind(name.matrix$LC_CODE,e.m))
@@ -332,16 +332,16 @@ rm(em.data, e.m)
 s.m.z<-matrix(0, nrow=dimention, ncol=dimention)
 seq.matrix.zonal<-as.data.frame(NULL)
 for (k in 1:length(zone_lookup$ID)){
-  for (i in 1:nrow(s.m.z)){
-    for (j in 1:ncol(s.m.z)){
-      seq.data<-data_merge_sel[which(data_merge_sel$ID_LC1==i & data_merge_sel$ID_LC2==j & data_merge_sel$ZONE==k),]
-      s.m.z[i,j]<-round(sum(seq.data$sq), digits=2)
-    }
-  }
-  s.m.z<-as.data.frame(s.m.z)
-  s.m.z.c<-as.data.frame(cbind(name.matrix$LC_CODE,s.m.z))
-  s.m.z.c<-cbind(rep(k,nrow(s.m.z)),s.m.z.c)
-  seq.matrix.zonal<-rbind(seq.matrix.zonal,s.m.z.c)
+for (i in 1:nrow(s.m.z)){
+for (j in 1:ncol(s.m.z)){
+seq.data<-data_merge_sel[which(data_merge_sel$ID_LC1==i & data_merge_sel$ID_LC2==j & data_merge_sel$ZONE==k),]
+s.m.z[i,j]<-round(sum(seq.data$sq), digits=2)
+}
+}
+s.m.z<-as.data.frame(s.m.z)
+s.m.z.c<-as.data.frame(cbind(name.matrix$LC_CODE,s.m.z))
+s.m.z.c<-cbind(rep(k,nrow(s.m.z)),s.m.z.c)
+seq.matrix.zonal<-rbind(seq.matrix.zonal,s.m.z.c)
 }
 colnames(seq.matrix.zonal)<-c("ZONE","LC_CODE",as.vector(name.matrix$LC_CODE))
 rm(seq.data, s.m.z, s.m.z.c)
@@ -349,10 +349,10 @@ rm(seq.data, s.m.z, s.m.z.c)
 #====Total Sequestration matrix====
 s.m<-matrix(0, nrow=dimention, ncol=dimention)
 for (i in 1:nrow(s.m)){
-  for (j in 1:ncol(s.m)){
-    seq.data<-data_merge_sel[which(data_merge_sel$ID_LC1==i & data_merge_sel$ID_LC2==j),]
-    s.m[i,j]<-round(sum(seq.data$sq), digits=2)
-  }
+for (j in 1:ncol(s.m)){
+seq.data<-data_merge_sel[which(data_merge_sel$ID_LC1==i & data_merge_sel$ID_LC2==j),]
+s.m[i,j]<-round(sum(seq.data$sq), digits=2)
+}
 }
 s.m<-as.data.frame(s.m)
 seq.matrix.total<-as.data.frame(cbind(name.matrix$LC_CODE,s.m))
@@ -384,12 +384,12 @@ write.dbf(data_zone, "Carbon_Summary.dbf")
 write.dbf(em.matrix.total,"Total_Emission_Matrix.dbf ")
 write.dbf(seq.matrix.total, "Total_Sequestration_Matrix.dbf")
 for (i in 1:length(zone_lookup$ID)){
-  em_matrix_z<-em.matrix.zonal[which(em.matrix.zonal$ZONE == i),]
-  em_matrix_z$ZONE<-NULL
-  seq_matrix_z<-seq.matrix.zonal[which(seq.matrix.zonal$ZONE == i),]
-  seq_matrix_z$ZONE<-NULL
-  write.dbf(em_matrix_z,paste("Emission_Matrix_Zone_",i,sep=""))
-  write.dbf(seq_matrix_z,paste("Sequestration_Matrix_Zone_",i,sep=""))
+em_matrix_z<-em.matrix.zonal[which(em.matrix.zonal$ZONE == i),]
+em_matrix_z$ZONE<-NULL
+seq_matrix_z<-seq.matrix.zonal[which(seq.matrix.zonal$ZONE == i),]
+seq_matrix_z$ZONE<-NULL
+write.dbf(em_matrix_z,paste("Emission_Matrix_Zone_",i,sep=""))
+write.dbf(seq_matrix_z,paste("Sequestration_Matrix_Zone_",i,sep=""))
 }
 
 #====Rearrange zone carbon====
@@ -417,16 +417,16 @@ lu1<-as.data.frame(unique(lu1))
 colnames(lu1)<-"ID"
 lu1<-merge(lu1,lookup_lc, by="ID")
 lu1<-lu1[order(lu1$ID),]
-ColScale.lu1<-scale_fill_manual(name="Land Use Class", breaks=lu1$ID, labels=lu1$LC, values=lu1$Colors)
+ColScale.lu1<-scale_fill_manual(name="Tipe tutupan lahan t1", breaks=lu1$ID, labels=lu1$LC, values=lu1$Colors)
 plot.LU1<-gplot(landuse1, maxpixels=100000) + geom_raster(aes(fill=as.factor(value))) +
-  coord_equal() + ColScale.lu1 +
-  theme(plot.title = element_text(lineheight= 5, face="bold")) +
-  theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
-         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
-         legend.title = element_text(size=8),
-         legend.text = element_text(size = 6),
-         legend.key.height = unit(0.25, "cm"),
-         legend.key.width = unit(0.25, "cm"))
+coord_equal() + ColScale.lu1 +
+theme(plot.title = element_text(lineheight= 5, face="bold")) +
+theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
+panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+legend.title = element_text(size=8),
+legend.text = element_text(size = 6),
+legend.key.height = unit(0.25, "cm"),
+legend.key.width = unit(0.25, "cm"))
 
 #====Landuse 2 map====
 lu2<-data_merge[,2]
@@ -434,32 +434,32 @@ lu2<-as.data.frame(unique(lu2))
 colnames(lu2)<-"ID"
 lu2<-merge(lu2,lookup_lc, by="ID")
 lu2<-lu2[order(lu2$ID),]
-ColScale.lu2<-scale_fill_manual(name="Land Use Class", breaks=lu2$ID, labels=lu2$LC, values=lu2$Colors)
+ColScale.lu2<-scale_fill_manual(name="Tipe tutupan lahan t2", breaks=lu2$ID, labels=lu2$LC, values=lu2$Colors)
 plot.LU2<-gplot(landuse2, maxpixels=100000) + geom_raster(aes(fill=as.factor(value))) +
-  coord_equal() + ColScale.lu2 +
-  theme(plot.title = element_text(lineheight= 5, face="bold")) +
-  theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
-         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
-         legend.title = element_text(size=8),
-         legend.text = element_text(size = 6),
-         legend.key.height = unit(0.25, "cm"),
-         legend.key.width = unit(0.25, "cm"))
+coord_equal() + ColScale.lu2 +
+theme(plot.title = element_text(lineheight= 5, face="bold")) +
+theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
+panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+legend.title = element_text(size=8),
+legend.text = element_text(size = 6),
+legend.key.height = unit(0.25, "cm"),
+legend.key.width = unit(0.25, "cm"))
 
 myColors  <-c(myColors5,myColors1, myColors2, myColors3, myColors4, myColors7, myColors6, myColors8)
 
 
 #====zone map====
 myColors.Z <- myColors[1:length(unique(lookup_z$ID))]
-ColScale.Z<-scale_fill_manual(name="Zone Class", breaks=lookup_z$ID, labels=lookup_z$Z_NAME, values=myColors.Z)
+ColScale.Z<-scale_fill_manual(name="Kelas Unit Perencanaan", breaks=lookup_z$ID, labels=lookup_z$Z_NAME, values=myColors.Z)
 plot.Z<-gplot(zone, maxpixels=100000) + geom_raster(aes(fill=as.factor(value))) +
-  coord_equal() + ColScale.Z +
-  theme(plot.title = element_text(lineheight= 5, face="bold")) +
-  theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
-         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
-         legend.title = element_text(size=8),
-         legend.text = element_text(size = 6),
-         legend.key.height = unit(0.25, "cm"),
-         legend.key.width = unit(0.25, "cm"))
+coord_equal() + ColScale.Z +
+theme(plot.title = element_text(lineheight= 5, face="bold")) +
+theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
+panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+legend.title = element_text(size=8),
+legend.text = element_text(size = 6),
+legend.key.height = unit(0.25, "cm"),
+legend.key.width = unit(0.25, "cm"))
 
 rm(myColors7,myColors1, myColors2, myColors3, myColors4, myColors5, myColors6,myColors8)
 #====Average Zonal Carbon Rate t1====
@@ -468,15 +468,15 @@ rcl.m.c2<-as.matrix(data_zone[,5])
 rcl.m<-cbind(rcl.m.c1,rcl.m.c2)
 Z.Avg.C.t1<-reclassify(zone, rcl.m)
 plot.Z.Avg.C.t1<-gplot(Z.Avg.C.t1, maxpixels=100000) + geom_raster(aes(fill=value)) +
-  coord_equal() + scale_fill_gradient(name="Carbon Density Level",low = "#FFCC66", high="#003300", guide="colourbar") +
-  ggtitle(paste(" Average Carbon Density of", location, period1 )) + 
-  theme(plot.title = element_text(lineheight= 5, face="bold")) +
-  theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
-         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
-         legend.title = element_text(size=8),
-         legend.text = element_text(size = 8),
-         legend.key.height = unit(0.375, "cm"),
-         legend.key.width = unit(0.375, "cm"))
+coord_equal() + scale_fill_gradient(name="Carbon Density Level",low = "#FFCC66", high="#003300", guide="colourbar") +
+ggtitle(paste("Rerata Kerapatan Karbon", location, period1 )) +
+theme(plot.title = element_text(lineheight= 5, face="bold")) +
+theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
+panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+legend.title = element_text(size=8),
+legend.text = element_text(size = 8),
+legend.key.height = unit(0.375, "cm"),
+legend.key.width = unit(0.375, "cm"))
 
 #====Average Zonal Carbon Rate t2====
 rcl.m.c1<-as.matrix(data_zone[,1])
@@ -484,133 +484,133 @@ rcl.m.c2<-as.matrix(data_zone[,6])
 rcl.m<-cbind(rcl.m.c1,rcl.m.c2)
 Z.Avg.C.t2<-reclassify(zone, rcl.m)
 plot.Z.Avg.C.t2<-gplot(Z.Avg.C.t2, maxpixels=100000) + geom_raster(aes(fill=value)) +
-  coord_equal() + scale_fill_gradient(name="Carbon Density Level",low = "#FFCC66", high="#003300", guide="colourbar") +
-  ggtitle(paste(" Average Carbon Density of", location, period2 )) + 
-  theme(plot.title = element_text(lineheight= 5, face="bold")) +
-  theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
-         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
-         legend.title = element_text(size=8),
-         legend.text = element_text(size = 8),
-         legend.key.height = unit(0.375, "cm"),
-         legend.key.width = unit(0.375, "cm"))
+coord_equal() + scale_fill_gradient(name="Carbon Density Level",low = "#FFCC66", high="#003300", guide="colourbar") +
+ggtitle(paste("Rerata Kerapatan Karbon", location, period2 )) +
+theme(plot.title = element_text(lineheight= 5, face="bold")) +
+theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
+panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+legend.title = element_text(size=8),
+legend.text = element_text(size = 8),
+legend.key.height = unit(0.375, "cm"),
+legend.key.width = unit(0.375, "cm"))
 
-#====Average Zonal Emission Rate==== 
+#====Average Zonal Emission Rate====
 rcl.m.c1<-as.matrix(data_zone[,1])
 rcl.m.c2<-as.matrix(data_zone[,7])
 rcl.m<-cbind(rcl.m.c1,rcl.m.c2)
 Z.Avg.em<-reclassify(zone, rcl.m)
 plot.Z.Avg.em<-gplot(Z.Avg.em, maxpixels=100000) + geom_raster(aes(fill=value)) +
-  coord_equal() + scale_fill_gradient(name="Emission Level",low = "#FFCC66", high="#003300", guide="colourbar") +
-  ggtitle(paste(" Average Emission Rate of", location, period1, "-", period2 )) + 
-  theme(plot.title = element_text(lineheight= 5, face="bold")) +
-  theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
-         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
-         legend.title = element_text(size=8),
-         legend.text = element_text(size = 8),
-         legend.key.height = unit(0.375, "cm"),
-         legend.key.width = unit(0.375, "cm"))
+coord_equal() + scale_fill_gradient(name="Tingkat Emisi",low = "#FFCC66", high="#003300", guide="colourbar") +
+ggtitle(paste(" Rerata laju emisi", location, period1, "-", period2 )) +
+theme(plot.title = element_text(lineheight= 5, face="bold")) +
+theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
+panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+legend.title = element_text(size=8),
+legend.text = element_text(size = 8),
+legend.key.height = unit(0.375, "cm"),
+legend.key.width = unit(0.375, "cm"))
 
-#====Average Zonal Sequestration Rate==== 
+#====Average Zonal Sequestration Rate====
 rcl.m.c1<-as.matrix(data_zone[,1])
 rcl.m.c2<-as.matrix(data_zone[,8])
 rcl.m<-cbind(rcl.m.c1,rcl.m.c2)
 Z.Avg.sq<-reclassify(zone,rcl.m)
 plot.Z.Avg.sq<-gplot(Z.Avg.sq, maxpixels=100000) + geom_raster(aes(fill=value)) +
-  coord_equal() + scale_fill_gradient(name="Sequestration Level",low = "#FFCC66", high="#003300", guide="colourbar") +
-  ggtitle(paste(" Average Sequestration Rate of", location, period1, "-", period2 )) + 
-  theme(plot.title = element_text(lineheight= 5, face="bold")) +
-  theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
-         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
-         legend.title = element_text(size=8),
-         legend.text = element_text(size = 8),
-         legend.key.height = unit(0.375, "cm"),
-         legend.key.width = unit(0.375, "cm"))
+coord_equal() + scale_fill_gradient(name="Tingkat Sequestrasi",low = "#FFCC66", high="#003300", guide="colourbar") +
+ggtitle(paste("Rerata laju sequestrasi", location, period1, "-", period2 )) +
+theme(plot.title = element_text(lineheight= 5, face="bold")) +
+theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
+panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+legend.title = element_text(size=8),
+legend.text = element_text(size = 8),
+legend.key.height = unit(0.375, "cm"),
+legend.key.width = unit(0.375, "cm"))
 
 #====Carbon 1 map====
 y<-ceiling( maxValue(carbon1)/100)
 y<-y*100
 plot.C1  <- gplot(carbon1, maxpixels=100000) + geom_raster(aes(fill=value)) + coord_equal() +
-  scale_fill_gradient(name="Carbon Density Level",low = "#FFCC66", high="#003300",limits=c(0,y), breaks=c(0,10,20,50,100,200,300), guide="colourbar") +
-  theme(plot.title = element_text(lineheight= 5, face="bold")) +
-  theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
-         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
-         legend.title = element_text(size=8),
-         legend.text = element_text(size = 7),
-         legend.key.height = unit(1.5, "cm"),
-         legend.key.width = unit(0.375, "cm"))
+scale_fill_gradient(name="Kerapatan karbon",low = "#FFCC66", high="#003300",limits=c(0,y), breaks=c(0,10,20,50,100,200,300), guide="colourbar") +
+theme(plot.title = element_text(lineheight= 5, face="bold")) +
+theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
+panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+legend.title = element_text(size=8),
+legend.text = element_text(size = 7),
+legend.key.height = unit(1.5, "cm"),
+legend.key.width = unit(0.375, "cm"))
 
 #====Carbon 2 map====
 plot.C2  <- gplot(carbon2, maxpixels=100000) + geom_raster(aes(fill=value)) + coord_equal() +
-  scale_fill_gradient(name="Carbon Density Level",low = "#FFCC66", high="#003300",limits=c(0,y), breaks=c(0,10,20,50,100,200,300), guide="colourbar") +
-  theme(plot.title = element_text(lineheight= 5, face="bold")) +
-  theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
-         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
-         legend.title = element_text(size=8),
-         legend.text = element_text(size = 7),
-         legend.key.height = unit(1.5, "cm"),
-         legend.key.width = unit(0.375, "cm"))
+scale_fill_gradient(name="Kerapatan karbon",low = "#FFCC66", high="#003300",limits=c(0,y), breaks=c(0,10,20,50,100,200,300), guide="colourbar") +
+theme(plot.title = element_text(lineheight= 5, face="bold")) +
+theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
+panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+legend.title = element_text(size=8),
+legend.text = element_text(size = 7),
+legend.key.height = unit(1.5, "cm"),
+legend.key.width = unit(0.375, "cm"))
 
- #====Carbon Emission Map====
+#====Carbon Emission Map====
 plot.E  <- gplot(emission, maxpixels=100000) + geom_raster(aes(fill=value)) + coord_equal() +
-  scale_fill_gradient(name="Emission (TON CO2eq)",low = "#FFCC66", high="#FF0000", guide="colourbar") +
-  theme(plot.title = element_text(lineheight= 5, face="bold")) +
-  theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
-         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
-         legend.title = element_text(size=8),
-         legend.text = element_text(size = 8),
-         legend.key.height = unit(0.375, "cm"),
-         legend.key.width = unit(0.375, "cm"))
+scale_fill_gradient(name="Emisi (ton CO2eq)",low = "#FFCC66", high="#FF0000", guide="colourbar") +
+theme(plot.title = element_text(lineheight= 5, face="bold")) +
+theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
+panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+legend.title = element_text(size=8),
+legend.text = element_text(size = 8),
+legend.key.height = unit(0.375, "cm"),
+legend.key.width = unit(0.375, "cm"))
 
 #====Carbon Sequestration Map====
 plot.S  <- gplot(sequestration, maxpixels=100000) + geom_raster(aes(fill=value)) + coord_equal() +
-  scale_fill_gradient(name="Sequestration (TON CO2eq)",low = "#FFCC66", high="#000033", guide="colourbar") + 
-  theme(plot.title = element_text(lineheight= 5, face="bold")) +
-  theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
-         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
-         legend.title = element_text(size=8),
-         legend.text = element_text(size = 8),
-         legend.key.height = unit(0.375, "cm"),
-         legend.key.width = unit(0.375, "cm"))
+scale_fill_gradient(name="Sequestrasi (ton CO2eq)",low = "#FFCC66", high="#000033", guide="colourbar") +
+theme(plot.title = element_text(lineheight= 5, face="bold")) +
+theme( axis.title.x=element_blank(),axis.title.y=element_blank(),
+panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+legend.title = element_text(size=8),
+legend.text = element_text(size = 8),
+legend.key.height = unit(0.375, "cm"),
+legend.key.width = unit(0.375, "cm"))
 
 #====Emission Rate====
 emissionRate<-ggplot(data=zone_carbon, aes(x=reorder(Z_NAME, -Net_em_rate), y=(zone_carbon$Net_em_rate))) + geom_bar(stat="identity", fill="Red") +
-  geom_text(data=zone_carbon, aes(label=round(Net_em_rate, 1)),size=4) +
-  ggtitle(paste("Net Emmission Rate of", location, period1,"-", period2 )) + guides(fill=FALSE) + ylab("CO2eq/ha.yr") +
-  theme(plot.title = element_text(lineheight= 5, face="bold")) +
-  theme(axis.title.x=element_blank(), axis.text.x = element_text(angle=20),
-        panel.grid.major=element_blank(), panel.grid.minor=element_blank())
+geom_text(data=zone_carbon, aes(label=round(Net_em_rate, 1)),size=4) +
+ggtitle(paste("Rerata laju emisi bersih", location, period1,"-", period2 )) + guides(fill=FALSE) + ylab("CO2eq/ha.yr") +
+theme(plot.title = element_text(lineheight= 5, face="bold")) +
+theme(axis.title.x=element_blank(), axis.text.x = element_text(angle=20),
+panel.grid.major=element_blank(), panel.grid.minor=element_blank())
 
-#====Largest emission==== 
+#====Largest emission====
 largestEmission<-ggplot(data=tb_em_total_10, aes(x=reorder(LU_CODE, -em), y=(em))) + geom_bar(stat="identity", fill="blue") +
-  geom_text(data=tb_em_total_10, aes(x=LU_CODE, y=em, label=round(em, 1)),size=3, vjust=0.1) +
-  ggtitle(paste("Largest Source of Emission in", location )) + guides(fill=FALSE) + ylab("CO2eq") +
-  theme(plot.title = element_text(lineheight= 5, face="bold")) + scale_y_continuous() +
-  theme(axis.title.x=element_blank(), axis.text.x = element_text(size=8),
-        panel.grid.major=element_blank(), panel.grid.minor=element_blank())
+geom_text(data=tb_em_total_10, aes(x=LU_CODE, y=em, label=round(em, 1)),size=3, vjust=0.1) +
+ggtitle(paste("Sumber emisi terbesar", location )) + guides(fill=FALSE) + ylab("CO2eq") +
+theme(plot.title = element_text(lineheight= 5, face="bold")) + scale_y_continuous() +
+theme(axis.title.x=element_blank(), axis.text.x = element_text(size=8),
+panel.grid.major=element_blank(), panel.grid.minor=element_blank())
 
 #====Largest Sequestration====
 largestSeq<-ggplot(data=tb_seq_total_10, aes(x=reorder(LU_CODE, -seq), y=(seq))) + geom_bar(stat="identity", fill="green") +
-  geom_text(data=tb_seq_total_10, aes(x=LU_CODE, y=seq, label=round(seq, 1)),size=3, vjust=0.1) +
-  ggtitle(paste("Largest Source of Sequestration in", location )) + guides(fill=FALSE) + ylab("CO2eq") +
-  theme(plot.title = element_text(lineheight= 5, face="bold")) + scale_y_continuous() +
-  theme(axis.title.x=element_blank(), axis.text.x = element_text(size=8),
-        panel.grid.major=element_blank(), panel.grid.minor=element_blank())
+geom_text(data=tb_seq_total_10, aes(x=LU_CODE, y=seq, label=round(seq, 1)),size=3, vjust=0.1) +
+ggtitle(paste("Sumber sequestrasi terbesar", location )) + guides(fill=FALSE) + ylab("CO2eq") +
+theme(plot.title = element_text(lineheight= 5, face="bold")) + scale_y_continuous() +
+theme(axis.title.x=element_blank(), axis.text.x = element_text(size=8),
+panel.grid.major=element_blank(), panel.grid.minor=element_blank())
 
 
 #====Create RTF Report File====
-title<-"\\b\\fs32 LUMENS-QUES Project Report\\b0\\fs20"
-sub_title<-"\\b\\fs28 Sub-modules: Carbon Dynamics Quantification\\b0\\fs20"
+title<-"\\b\\fs40 LUMENS-QUES Project Report\\b0\\fs20"
+sub_title<-"\\b\\fs32 KUANTIFIKASI DINAMIKA CADANGAN KARBON\\b0\\fs20"
 test<-as.character(Sys.Date())
 date<-paste("Date : ", test, sep="")
-time_start<-paste("Processing started : ", time_start, sep="")
-time_end<-paste("Processing ended : ", eval(parse(text=(paste("Sys.time ()")))), sep="")
+time_start<-paste("Proses dimulai : ", time_start, sep="")
+time_end<-paste("Proses selesai : ", eval(parse(text=(paste("Sys.time ()")))), sep="")
 line<-paste("------------------------------------------------------------------------------------------------------------------------------------------------")
 area_name_rep<-paste("\\b", "\\fs20", location, "\\b0","\\fs20")
 I_O_period_1_rep<-paste("\\b","\\fs20", period1)
 I_O_period_2_rep<-paste("\\b","\\fs20", period2)
-chapter1<-"\\b\\fs24 DATA INPUT \\b0\\fs20"
-chapter2<-"\\b\\fs24 ANALYSIS AT LANDSCAPE LEVEL \\b0\\fs20"
-chapter3<-"\\b\\fs24 ANALYSIS AT PLANNING UNIT LEVEL \\b0\\fs20"
+chapter1<-"\\b\\fs32 DATA YANG DIGUNAKAN \\b0\\fs20"
+chapter2<-"\\b\\fs32 ANALISA PADA TINGKAT BENTANG LAHAN \\b0\\fs20"
+chapter3<-"\\b\\fs32 ANALISA PADA TINGKAT UNIT PERENCANAAN \\b0\\fs20"
 rtffile <- RTF("LUMENS_QUES-C_report.lpr", font.size=9)
 addParagraph(rtffile, title)
 addParagraph(rtffile, sub_title)
@@ -621,7 +621,12 @@ addParagraph(rtffile, time_start)
 addParagraph(rtffile, time_end)
 addParagraph(rtffile, line)
 addNewLine(rtffile)
+addParagraph(rtffile, "Analisa dinamika cadangan karbon dilakukan untuk perubahan cadangan karbon di suatu daerah pada satu kurun waktu. Metode yang digunakan adalah metode Stock Difference. Emisi dihitung sebagai jumlah penurunan cadangan karbon akibat perubahan tutupan lahan. Sebaliknya, sequestrasi dihitung sebagai jumlah penambahan cadangan karbon akibat perubahan tutupan lahan. Analisa ini dilakukan dengan menggunakan data peta tutupan lahan pada dua periode waktu yang berbeda dan tabel acuan kerapatan karbon untuk masing-masing tipe tutupan lahan. Selain itu, dengan memasukkan data unit perencanaan kedalam proses analisa, dapat diketahui tingkat perubahan cadangan karbon pada masing-masing kelas unit perencanaan yang ada. Informasi yang dihasilkan melalui analisa ini dapat digunakan dalam proses perencanaan untuk berbagai hal. Diantaranya adalah: menentukan prioritas aksi mitigasi perubahan iklim, mengetahui faktor pemicu pterjadinya emisi, merencanakan skenario pembangunan di masa yang akan datang, dan lain sebagainya.")
+addNewLine(rtffile)
 addParagraph(rtffile, chapter1)
+addParagraph(rtffile, line)
+addNewLine(rtffile)
+addParagraph(rtffile, "Data yang digunakan dalam analisa ini adalah data peta penggunaan lahan dan data peta unit perencanaan daerah. Data pendukung yang digunakan adalah peta acuan tipe penggunaan lahan, data acuan kerapatan karbon masing-masing tipe tutupan lahan dan data acuan kelas unit perencanaan")
 addNewLine(rtffile)
 
 text <- paste("\\b \\fs20 Peta penutupan lahan \\b0 \\fs20 ", area_name_rep, "\\b \\fs20 tahun \\b0 \\fs20 ", I_O_period_1_rep, sep="")
@@ -644,6 +649,10 @@ addNewLine(rtffile, n=1)
 addNewLine(rtffile, n=1)
 addNewLine(rtffile, n=1)
 addParagraph(rtffile, chapter2)
+addParagraph(rtffile, line)
+addNewLine(rtffile)
+addParagraph(rtffile, "Pada bagian ini disajikan hasil analisa dinamika cadangan karbon untuk keseluruhan bentang lahan yang dianalisa. Beberapa bentuk analisa yang dilakukan antara lain: tingkat emisi, tingkat sequestrasi, laju emisi dan tipe perubahan penggunaan lahan yang paling banyak menyebabkan emisi/sequestrasi")
+
 addNewLine(rtffile)
 text <- paste("\\b \\fs20 Peta kerapatan karbon \\b0 \\fs20 ", area_name_rep, "\\b \\fs20 tahun \\b0 \\fs20 ", I_O_period_1_rep, " \\b \\fs20 (dalam Ton C/Ha)\\b0 \\fs20", sep="")
 addParagraph(rtffile, text)
@@ -681,10 +690,10 @@ addNewLine(rtffile, n=1)
 addNewLine(rtffile, n=1)
 addTable(rtffile, zone_carbon)
 addParagraph(rtffile, "Note : ")
-addParagraph(rtffile, "Em_tot = Total Emission in ton CO2eq ")
-addParagraph(rtffile, "Sq_tot = Total Sequestration in ton CO2eq ")
-addParagraph(rtffile, "Net_em = Total Emission - Total Sequestration in ton CO2eq ")
-addParagraph(rtffile, "Net_em_rate = (Total Emission - Total Sequestration) / (area * period) in ton CO2eq/ha.year ")
+addParagraph(rtffile, "Em_tot = Total Emisi dalam ton CO2eq ")
+addParagraph(rtffile, "Sq_tot = Total Sequestrasi dalam ton CO2eq ")
+addParagraph(rtffile, "Net_em = Total Emisi - Total Sequestrasi dalam ton CO2eq ")
+addParagraph(rtffile, "Net_em_rate = (Total Emisi - Total Sequestrasi) / (luas * periode waktu) dalam ton CO2eq/ha.year ")
 addNewLine(rtffile, n=1)
 addPlot.RTF(rtffile, plot.fun=plot, width=6.7, height=3, res=150, emissionRate )
 addNewLine(rtffile, n=1)
@@ -705,14 +714,14 @@ addNewLine(rtffile, n=1)
 addNewLine(rtffile, n=1)
 addNewLine(rtffile, n=1)
 addNewLine(rtffile, n=1)
-addParagraph(rtffile, "\\b \\fs20 Largest Sources of Emission\\b0 \\fs20")
+addParagraph(rtffile, "\\b \\fs20 Sumber Emisi Terbesar\\b0 \\fs20")
 addNewLine(rtffile, n=1)
 addTable(rtffile, tb_em_total_10)
 addNewLine(rtffile, n=1)
 addPlot.RTF(rtffile, plot.fun=plot, width=6.7, height=3, res=150, largestEmission )
 addNewLine(rtffile, n=1)
 rm(largestEmission)
-addParagraph(rtffile, "\\b \\fs20 Largest Sources of Sequestration\\b0 \\fs20")
+addParagraph(rtffile, "\\b \\fs20 Sumber sequestrasi terbesar\\b0 \\fs20")
 addNewLine(rtffile, n=1)
 addTable(rtffile, tb_seq_total_10)
 addNewLine(rtffile, n=1)
@@ -723,75 +732,79 @@ rm(largestSeq)
 addNewLine(rtffile, n=1)
 addNewLine(rtffile, n=1)
 addParagraph(rtffile, chapter3)
+addParagraph(rtffile, line)
+addNewLine(rtffile)
+addParagraph(rtffile, "Pada bagian ini disajikan hasil analisa dinamika cadangan karbon untuk masing-masing kelas unit perencanaan yang dianalisa. Beberapa bentuk analisa yang dilakukan antara lain: tingkat emisi, tingkat sequestrasi, laju emisi dan tipe perubahan penggunaan lahan yang paling banyak menyebabkan emisi/sequestrasi")
+
 addNewLine(rtffile)
 
 z.emission.name<-as.vector(NULL)
 z.seq.name<-as.vector(NULL)
 for(i in 1:length(zone_lookup$ID)){
-  a<-zone_lookup$ID[i]
-  zona<-paste("\\b", "\\fs20", i, "\\b0","\\fs20")
-  zona_nm<-paste("\\b", "\\fs20", data_zone$Z_NAME[i], "\\b0","\\fs20")
-  zona_ab<-paste("\\b", "\\fs20", data_zone$Z_CODE[i], "\\b0","\\fs20")
-  addParagraph(rtffile, "\\b \\fs20 Largest Sources of Emission in Zone \\b0 \\fs20", zona,"\\b \\fs20 - \\b0 \\fs20", zona_nm, "\\b \\fs20 (\\b0 \\fs20", zona_ab, "\\b \\fs20)\\b0 \\fs20" )
-  addNewLine(rtffile, n=1)
-  
-  tb_em_zon<-tb_em_zonal[which(tb_em_zonal$ZONE == a),]
-  tb_em_zon$ZONE<-NULL
-  addTable(rtffile, tb_em_zon)
-  addNewLine(rtffile, n=1)
-  
-  #Largest emission
-  largestE.Z<-ggplot(data=tb_em_zon, aes(x=reorder(LU_CODE, -em), y=(em))) + geom_bar(stat="identity", fill="blue") +
-    geom_text(data=tb_em_zon, aes(x=LU_CODE, y=em, label=round(em, 1)),size=3, vjust=0.1) +
-    ggtitle(paste("Largest Emission in Zone",i, "-", data_zone$Z_CODE[i] )) + guides(fill=FALSE) + ylab("CO2eq") +
-    theme(plot.title = element_text(lineheight= 5, face="bold")) + scale_y_continuous() +
-    theme(axis.title.x=element_blank(), axis.text.x = element_text(size=8),
-          panel.grid.major=element_blank(), panel.grid.minor=element_blank())
-  
-  png(filename=paste("Largest_Emission_Z_",a,".png", sep=""), 
-      type="cairo",
-      units="in", 
-      width=6.7, 
-      height=4,  
-      res=125)
-  print(largestE.Z)
-  dev.off()
-  
-  z.emission.name<-c(z.emission.name, paste("Largest_Emission_Z_",a,".png", sep=""))
-  
-  addPlot.RTF(rtffile, plot.fun=plot, width=6.7, height=3, res=150, largestE.Z )
-  addNewLine(rtffile, n=1)
-  
-  addParagraph(rtffile, "\\b \\fs20 Largest Sources of Sequestration in Zone \\b0 \\fs20", zona,"\\b \\fs20 - \\b0 \\fs20", zona_nm, "\\b \\fs20 (\\b0 \\fs20", zona_ab, "\\b \\fs20)\\b0 \\fs20" )
-  addNewLine(rtffile, n=1)
-  
-  tb_seq_zon<-tb_seq_zonal[which(tb_seq_zonal$ZONE == a),]
-  tb_seq_zon$ZONE<-NULL
-  addTable(rtffile, tb_seq_zon)
-  addNewLine(rtffile, n=1)
-  
-  #Largest Sequestration
-  largestS.Z<-ggplot(data=tb_seq_zon, aes(x=reorder(LU_CODE, -seq), y=(seq))) + geom_bar(stat="identity", fill="green") +
-    geom_text(data=tb_seq_zon, aes(x=LU_CODE, y=seq, label=round(seq, 1)),size=3, vjust=0.1) +
-    ggtitle(paste("Largest Sequestration in Zone",i, "-", data_zone$Z_CODE[i] )) + guides(fill=FALSE) + ylab("CO2eq") +
-    theme(plot.title = element_text(lineheight= 5, face="bold")) + scale_y_continuous() +
-    theme(axis.title.x=element_blank(), axis.text.x = element_text(size=8),
-          panel.grid.major=element_blank(), panel.grid.minor=element_blank())
-  
-  png(filename=paste("Largest_Seq_Z_",a,".png", sep=""), 
-      type="cairo",
-      units="in", 
-      width=6.7, 
-      height=4,  
-      res=125)
-  print(largestS.Z)
-  dev.off()
-  
-  z.seq.name<-c(z.seq.name, paste("Largest_Seq_Z_",a,".png", sep=""))
-  
-  addPlot.RTF(rtffile, plot.fun=plot, width=6.7, height=3, res=150, largestS.Z )
-  addNewLine(rtffile, n=1)
-  
+a<-zone_lookup$ID[i]
+zona<-paste("\\b", "\\fs20", i, "\\b0","\\fs20")
+zona_nm<-paste("\\b", "\\fs20", data_zone$Z_NAME[i], "\\b0","\\fs20")
+zona_ab<-paste("\\b", "\\fs20", data_zone$Z_CODE[i], "\\b0","\\fs20")
+addParagraph(rtffile, "\\b \\fs20 Sumber Emisi terbesar pada \\b0 \\fs20", zona,"\\b \\fs20 - \\b0 \\fs20", zona_nm, "\\b \\fs20 (\\b0 \\fs20", zona_ab, "\\b \\fs20)\\b0 \\fs20" )
+addNewLine(rtffile, n=1)
+
+tb_em_zon<-tb_em_zonal[which(tb_em_zonal$ZONE == a),]
+tb_em_zon$ZONE<-NULL
+addTable(rtffile, tb_em_zon)
+addNewLine(rtffile, n=1)
+
+#Largest emission
+largestE.Z<-ggplot(data=tb_em_zon, aes(x=reorder(LU_CODE, -em), y=(em))) + geom_bar(stat="identity", fill="blue") +
+geom_text(data=tb_em_zon, aes(x=LU_CODE, y=em, label=round(em, 1)),size=3, vjust=0.1) +
+ggtitle(paste("Sumber Emisi Terbesar Pada",i, "-", data_zone$Z_CODE[i] )) + guides(fill=FALSE) + ylab("CO2eq") +
+theme(plot.title = element_text(lineheight= 5, face="bold")) + scale_y_continuous() +
+theme(axis.title.x=element_blank(), axis.text.x = element_text(size=8),
+panel.grid.major=element_blank(), panel.grid.minor=element_blank())
+
+png(filename=paste("Largest_Emission_Z_",a,".png", sep=""),
+type="cairo",
+units="in",
+width=6.7,
+height=4,
+res=125)
+print(largestE.Z)
+dev.off()
+
+z.emission.name<-c(z.emission.name, paste("Largest_Emission_Z_",a,".png", sep=""))
+
+addPlot.RTF(rtffile, plot.fun=plot, width=6.7, height=3, res=150, largestE.Z )
+addNewLine(rtffile, n=1)
+
+addParagraph(rtffile, "\\b \\fs20 Sumber Sequestrasi Terbesar Pada \\b0 \\fs20", zona,"\\b \\fs20 - \\b0 \\fs20", zona_nm, "\\b \\fs20 (\\b0 \\fs20", zona_ab, "\\b \\fs20)\\b0 \\fs20" )
+addNewLine(rtffile, n=1)
+
+tb_seq_zon<-tb_seq_zonal[which(tb_seq_zonal$ZONE == a),]
+tb_seq_zon$ZONE<-NULL
+addTable(rtffile, tb_seq_zon)
+addNewLine(rtffile, n=1)
+
+#Largest Sequestration
+largestS.Z<-ggplot(data=tb_seq_zon, aes(x=reorder(LU_CODE, -seq), y=(seq))) + geom_bar(stat="identity", fill="green") +
+geom_text(data=tb_seq_zon, aes(x=LU_CODE, y=seq, label=round(seq, 1)),size=3, vjust=0.1) +
+ggtitle(paste("Sumber Sequestrasi Terbesar Pada",i, "-", data_zone$Z_CODE[i] )) + guides(fill=FALSE) + ylab("CO2eq") +
+theme(plot.title = element_text(lineheight= 5, face="bold")) + scale_y_continuous() +
+theme(axis.title.x=element_blank(), axis.text.x = element_text(size=8),
+panel.grid.major=element_blank(), panel.grid.minor=element_blank())
+
+png(filename=paste("Largest_Seq_Z_",a,".png", sep=""),
+type="cairo",
+units="in",
+width=6.7,
+height=4,
+res=125)
+print(largestS.Z)
+dev.off()
+
+z.seq.name<-c(z.seq.name, paste("Largest_Seq_Z_",a,".png", sep=""))
+
+addPlot.RTF(rtffile, plot.fun=plot, width=6.7, height=3, res=150, largestS.Z )
+addNewLine(rtffile, n=1)
+
 }
 rm(largestE.Z, largestS.Z)
 done(rtffile)
