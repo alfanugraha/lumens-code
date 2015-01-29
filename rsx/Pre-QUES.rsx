@@ -194,15 +194,15 @@ lg_chg_zonal<-rbind(lg_chg_zonal,lg_chg_z_10)
 
 # calculate basic statistic
 #different landuse number handling
-n.lu1<-as.numeric(length(unique(data_merge_sel$ID_LC1)))
-n.lu2<-as.numeric(length(unique(data_merge_sel$ID_LC2)))
+n.lu1<-nrow(area_lc1)
+n.lu2<-nrow(area_lc2)
 if(n.lu1>n.lu2){
   diff.lu<-unique(data_merge_sel$ID_LC1)[is.na(match(unique(data_merge_sel$ID_LC1),unique(data_merge_sel$ID_LC2)))]
   new.lu<-area_lc1[area_lc1$ID %in% diff.lu, 1:3]
   new.lu$COUNT_LC1<-0
   colnames(new.lu)[2]<-"COUNT_LC2"
   colnames(new.lu)[3]<-"CLASS_LC2"
-  area_lc1<-rbind(area_lc1,new.lu)
+  area_lc2<-rbind(area_lc2,new.lu)
 } else if(n.lu1<n.lu2){
   diff.lu<-unique(data_merge_sel$ID_LC2)[is.na(match(unique(data_merge_sel$ID_LC2),unique(data_merge_sel$ID_LC1)))]
   new.lu<-area_lc2[area_lc2$ID %in% diff.lu, 1:3]
@@ -212,6 +212,7 @@ if(n.lu1>n.lu2){
   area_lc1<-rbind(area_lc1,new.lu)
 } else {
   area_lc1
+  area_lc2
 }
 area_summary <- merge(area_lc1,area_lc2,by="ID")
 Ov_chg<-as.data.frame(area_summary$CLASS_LC1)

@@ -1,13 +1,13 @@
 ##[QUES]=group
-working_directory="R:/Pre-QUES/"
-landuse_1="lc1990_jpr.tif"
-landuse_2="lc2010_jpr.tif"
-zone_l="plan_unit_jpr.tif"
+working_directory="C:/Users/ANugraha/Desktop/preques/jateng/"
+landuse_1="C:/Users/ANugraha/Documents/LUMENS/2_Jateng/3_Purbalingga/1_Raster/Purbalingga_lc00_49s_ND.tif"
+landuse_2="C:/Users/ANugraha/Documents/LUMENS/2_Jateng/3_Purbalingga/1_Raster/Purbalingga_lc10_49s_ND.tif"
+zone_l="C:/Users/ANugraha/Documents/LUMENS/2_Jateng/3_Purbalingga/1_Raster/Purbalingga_kws_nop2012_49s_ND.tif"
 period1=1990
 period2=2010
-location="Jayapura"
-lookup_lc="landuse_Jayapura.csv"
-lookup_zo="planning_unit_jayapura_lookup.csv"
+location="Purbalingga"
+lookup_lc="C:/Users/ANugraha/Documents/LUMENS/2_Jateng/3_Purbalingga/3_Table/Legend_ID_LC_Purbalingga.csv"
+lookup_zo="C:/Users/ANugraha/Documents/LUMENS/2_Jateng/3_Purbalingga/3_Table/Purbalingga_kws.csv"
 raster.nodata<-0
 ##luchg=output raster
 ##proj_prop=output table
@@ -50,7 +50,7 @@ proj_prop$Year_T2<-Year_T2
 proj_prop$period <- do.call(paste, c(proj_prop[c("Year_T1", "Year_T2")], sep = " - "))
 
 #load datasets
-landuse1 <- raster(landuse_1) #test comment
+landuse1 <- raster(landuse_1) 
 landuse2 <- raster(landuse_2)
 zone <- raster(zone_l)
 
@@ -195,15 +195,15 @@ for (i in 1:length(area_zone$ID)){
 
 # calculate basic statistic
 #different landuse number handling
-n.lu1<-as.numeric(length(unique(data_merge_sel$ID_LC1)))
-n.lu2<-as.numeric(length(unique(data_merge_sel$ID_LC2)))
+n.lu1<-nrow(area_lc1)
+n.lu2<-nrow(area_lc2)
 if(n.lu1>n.lu2){
   diff.lu<-unique(data_merge_sel$ID_LC1)[is.na(match(unique(data_merge_sel$ID_LC1),unique(data_merge_sel$ID_LC2)))]
   new.lu<-area_lc1[area_lc1$ID %in% diff.lu, 1:3]
   new.lu$COUNT_LC1<-0
   colnames(new.lu)[2]<-"COUNT_LC2"
   colnames(new.lu)[3]<-"CLASS_LC2"
-  area_lc1<-rbind(area_lc1,new.lu)
+  area_lc2<-rbind(area_lc2,new.lu)
 } else if(n.lu1<n.lu2){
   diff.lu<-unique(data_merge_sel$ID_LC2)[is.na(match(unique(data_merge_sel$ID_LC2),unique(data_merge_sel$ID_LC1)))]
   new.lu<-area_lc2[area_lc2$ID %in% diff.lu, 1:3]
@@ -213,6 +213,7 @@ if(n.lu1>n.lu2){
   area_lc1<-rbind(area_lc1,new.lu)
 } else {
   area_lc1
+  area_lc2
 }
 area_summary <- merge(area_lc1,area_lc2,by="ID")
 Ov_chg<-as.data.frame(area_summary$CLASS_LC1)
