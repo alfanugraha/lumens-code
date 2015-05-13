@@ -3,6 +3,7 @@
 ##location=string
 ##init.date=string
 ##final.date=string
+##sub.basin.poly_dir=vector
 ##end.rch=number 10
 ##passfilenames
 ##showplots
@@ -17,14 +18,22 @@ library(plyr)
 library(lubridate)
 library(foreign)
 library(rtf)
+library(rgdal)
 
-workd<-Wdir
-setwd(workd)
+
+setwd(Wdir)
 time_start<-paste(eval(parse(text=(paste("Sys.time ()")))), sep="")
 
+
+#Load protected area polygon
+tryCatch({
+sub.basin.polygon.base<- substr(basename(sub.basin.poly_dir), 1, nchar(basename(sub.basin.poly_dir)) - 4)
+sub.basin.poly<-readOGR(dsn=dirname(sub.basin.poly_dir),sub.basin.polygon.base)
+},error=function(e){cat("No sub-basin polygon file found:",conditionMessage(e), "\n")})
+
 #Step 5: Read observed particular sub-basin water balance
-sub.out<-read.table(paste(workd,"/output.sub", sep=''), skip=9)
-rch.out<-read.table(paste(workd,"/output.rch", sep=''), skip=9)
+sub.out<-read.table(paste(Wdir,"/output.sub", sep=''), skip=9)
+rch.out<-read.table(paste(Wdir,"/output.rch", sep=''), skip=9)
 mod.date<-as.character(seq(as.Date(init.date, "%d/%m/%Y"), as.Date(final.date, "%d/%m/%Y"), "days")); #create date sequence
 YEAR<-year(mod.date)
 DAY<-yday(mod.date)
@@ -587,6 +596,11 @@ plot.buffer <- ggplot() +
 
 
 #WRITE REPORT
+dirname<-paste('Output_subbasin_indicators_map',location,'_',period1,'_',period2,sep='')#change working directory
+dir.create(file.path(getwd(), dirname), showWarnings = FALSE)
+setwd(file.path(getwd(), dirname))
+
+
 title<-"\\b\\fs32 LUMENS Ques-H Project Report\\b0\\fs20"
 sub_title<-"\\b\\fs28 Sub-modules : Watershed Indicators\\b0\\fs20"
 date<-Sys.Date()
@@ -595,11 +609,11 @@ time_start<-paste("Processing started : ", time_start, sep="")
 time_end<-paste("Processing ended : ", eval(parse(text=(paste("Sys.time ()")))), sep="")
 line<-paste("--------------------------------------------------------------------------------------------------------------------------------------------")
 rtffile <- RTF(paste("Watershed Indicators -",location, period1,"-",period2, ".lpr",sep=" "))
-if (file.exists("C:/Program Files (x86)/LUMENS")){
-  addPng (rtffile, "C:/Program Files (x86)/LUMENS/lumens_header_report.png", width=6.43, height=0.43)
-} else{
-  addPng (rtffile, "C:/Program Files/LUMENS/lumens_header_report.png", width=6.43, height=0.43)
-}
+#if (file.exists("C:/Program Files (x86)/LUMENS")){
+#  addPng (rtffile, "C:/Program Files (x86)/LUMENS/lumens_header_report.png", width=6.43, height=0.43)
+#} else{
+#  addPng (rtffile, "C:/Program Files/LUMENS/lumens_header_report.png", width=6.43, height=0.43)
+#}
 subtitle.head<-paste(location, period1,"to",period2,sep=" ")
 addParagraph(rtffile, title)
 addParagraph(rtffile, sub_title)
@@ -654,3 +668,25 @@ while(y<=period2)
   y<-y+1
 }
 done(rtffile)
+
+
+#Export Shapefiles
+if (exists('sub.basin.poly')){
+  
+  y<-period1
+  while(y<=period2)
+  {
+  sub.basin.polygon_export<-sub.basin.poly
+  plot.graph=paste("indicator.pre.",y, sep="")
+  subasin_indicators<-get(plot.graph)[,2:12]
+  colnames(subasin_indicators)[1]<-'Subbasin'
+  subasin_indicators$year<-y
+  
+  colnames(subasin_indicators)<-c('Subbasin','TDisFrPr','RBufIn','BufIn', 'BufPk','HiMonFr','OvFlFr','SoQFlFr','SlFlFrM1','LoMoFr', 'Tot.SYLD','Year')
+  sub.basin.polygon_export@data<-data.frame(merge(sub.basin.polygon_export,subasin_indicators, by='Subbasin'))
+  filename<-paste('sub_basin_indicators',location,'_',y,sep='')
+  writeOGR(sub.basin.polygon_export, dsn=getwd(), filename,driver="ESRI Shapefile", overwrite_layer=T)
+  y<-y+1
+  }
+} 
+setwd(Wdir)
