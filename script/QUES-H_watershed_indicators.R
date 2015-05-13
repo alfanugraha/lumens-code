@@ -3,7 +3,10 @@
 ##location=string
 ##init.date=string
 ##final.date=string
+##sub.basin.poly_dir=vector
 ##end.rch=number 10
+##sub.basin.polygon.init=output vector
+##sub.basin.polygon.final=output vector
 ##passfilenames
 ##showplots
 
@@ -17,26 +20,33 @@ library(plyr)
 library(lubridate)
 library(foreign)
 library(rtf)
-
+library(rgdal)
 
 ##Wdir=folder
 
-Wdir<-"C:/Dataset QUES-H/04_SWAT scenarios/Merangin_2003_2010_LC2005/TxtInOut/"
+Wdir<-"C:/Dataset QUES-H/DAS Pulau Rengas SWAT/04_SWAT scenarios/Merangin_2003_2010_LC2005/TxtInOut"
 location<-"batang merangin"
 init.date="01/01/2003"
 final.date="31/12/2010"
+sub.basin.poly_dir<-"C:/Dataset QUES-H/DAS Pulau Rengas SWAT/04_SWAT scenarios/Watershed delineation output/subs1.shp"
 end.rch=10
 
 ##passfilenames
 ##showplots
 
-workd<-Wdir
-setwd(workd)
+
+setwd(Wdir)
 time_start<-paste(eval(parse(text=(paste("Sys.time ()")))), sep="")
 
+#Load protected area polygon
+tryCatch({
+sub.basin.polygon.base<- substr(basename(sub.basin.poly_dir), 1, nchar(basename(sub.basin.poly_dir)) - 4)
+sub.basin.poly<-readOGR(dsn=dirname(sub.basin.poly_dir),sub.basin.polygon.base)
+},error=function(e){cat("No sub-basin polygon file found:",conditionMessage(e), "\n")})
+
 #Step 5: Read observed particular sub-basin water balance
-sub.out<-read.table(paste(workd,"/output.sub", sep=''), skip=9)
-rch.out<-read.table(paste(workd,"/output.rch", sep=''), skip=9)
+sub.out<-read.table(paste(Wdir,"/output.sub", sep=''), skip=9)
+rch.out<-read.table(paste(Wdir,"/output.rch", sep=''), skip=9)
 mod.date<-as.character(seq(as.Date(init.date, "%d/%m/%Y"), as.Date(final.date, "%d/%m/%Y"), "days")); #create date sequence
 YEAR<-year(mod.date)
 DAY<-yday(mod.date)
@@ -511,7 +521,7 @@ plot.discharge.overland <- ggplot() +
   theme( legend.title = element_text(size=8),legend.text = element_text(size = 8))
 #geom_smooth(data= plot.OverlandFlowFrac.T, aes(x = Year, y = Total_Overland_Flow_Fraction, group=1),method="lm", se=FALSE)
 
-#CHART 2: Gradual Water release
+#CHART 2: Buffer Peak rain events
 plot.HighestMonthFrac<-rbind(basin.data.chart[6,], basin.data.chart[1,]); #create HighestMonthFrac dataframe
 plot.HighestMonthFrac.T <- as.data.frame(t(plot.HighestMonthFrac[,1:ncol(plot.HighestMonthFrac)]))
 plot.HighestMonthFrac.T$V1<-as.numeric(levels(plot.HighestMonthFrac.T$V1))[plot.HighestMonthFrac.T$V1]
@@ -526,7 +536,7 @@ colnames(plot.OverlandFlowFrac.T)<-c("Total_Overland_Flow_Fraction", "Year")
 
 y_scale<-c(y1,y2)
 
-plot.grad.water.res <- ggplot() +
+plot.buff.peak.events <- ggplot() +
   geom_point(data = plot.OverlandFlowFrac.T, aes(x = Year, y = Total_Overland_Flow_Fraction, color = "Total_Overland_Flow_Fraction")) +
   geom_point(data = plot.HighestMonthFrac.T, aes(x = Year, y = Highest_Month_Fraction, color = "Highest_Month_Fraction")) +
   geom_smooth(data= plot.OverlandFlowFrac.T, aes(x = Year, y = Total_Overland_Flow_Fraction, group=1, color="Total_Overland_Flow_Fraction"),method="lm", se=FALSE)+
@@ -555,7 +565,7 @@ colnames(plot.LowestMonthFrac.T)<-c("LowestMonthFrac", "Year")
 
 y_scale<-c(y1,y2,y3)
 
-plot.water.trans.func <- ggplot() +
+plot.grad.rel.func <- ggplot() +
   geom_point(data = plot.SoilQflow.T, aes(x = Year, y = SoilQFlow, color = "SoilQFlow")) +
   geom_point(data = plot.SlowFlowFrac.T, aes(x = Year, y = SlowFlowFrac, color = "SlowFlowFrac")) +
   geom_point(data = plot.LowestMonthFrac.T, aes(x = Year, y = LowestMonthFrac, color = "LowestMonthFrac")) +
@@ -599,12 +609,17 @@ plot.buffer <- ggplot() +
 
 
 #WRITE REPORT
-title<-"\\b\\fs32 LUMENS Ques-H Project Report\\b0\\fs20"
-sub_title<-"\\b\\fs28 Sub-modules : Watershed Indicators\\b0\\fs20"
+dirname<-paste('Output_subbasin_indicators_map',location,'_',period1,'_',period2,sep='')#change working directory
+dir.create(file.path(getwd(), dirname), showWarnings = FALSE)
+setwd(file.path(getwd(), dirname))
+
+
+title<-"\\b\\fs32 Laporan Hasil Analisis LUMENS QuES-H\\b0\\fs20"
+sub_title<-"\\b\\fs28 Sub-modul : Indikator Daerah Aliran Sungai\\b0\\fs20"
 date<-Sys.Date()
-date<-paste("Date : ", date, sep="")
-time_start<-paste("Processing started : ", time_start, sep="")
-time_end<-paste("Processing ended : ", eval(parse(text=(paste("Sys.time ()")))), sep="")
+date<-paste("Tanggal : ", date, sep="")
+time_start<-paste("Waktu mulai kalkulasi : ", time_start, sep="")
+time_end<-paste("Waktu akhir kalkulasi  : ", eval(parse(text=(paste("Sys.time ()")))), sep="")
 line<-paste("--------------------------------------------------------------------------------------------------------------------------------------------")
 rtffile <- RTF(paste("Watershed Indicators -",location, period1,"-",period2, ".lpr",sep=" "))
 #if (file.exists("C:/Program Files (x86)/LUMENS")){
@@ -612,7 +627,7 @@ rtffile <- RTF(paste("Watershed Indicators -",location, period1,"-",period2, ".l
 #} else{
 #  addPng (rtffile, "C:/Program Files/LUMENS/lumens_header_report.png", width=6.43, height=0.43)
 #}
-subtitle.head<-paste(location, period1,"to",period2,sep=" ")
+subtitle.head<-paste(location, period1,"sampai",period2,sep=" ")
 addParagraph(rtffile, title)
 addParagraph(rtffile, sub_title)
 addNewLine(rtffile)
@@ -622,36 +637,36 @@ addParagraph(rtffile, date)
 addParagraph(rtffile, time_start)
 addParagraph(rtffile, time_end)
 addParagraph(rtffile, line)
-text <- paste("area[ha]:", tot.area[1]*100 ,"       Number of Subbasins:", NSUB,sep=" ")
+text <- paste("Luas Area[ha]:", tot.area[1]*100 ,"       Jumlah Sub-DAS:", NSUB,sep=" ")
 addParagraph(rtffile, text)
 text<-paste("--------------------------------------------------------------------------------------------------------------------------------------------")
 addParagraph(rtffile, text)
-text <- paste("Basin level watershed indicators")
+text <- paste("Indikator Hidrologi pada skala Daerah Aliran Sungai (DAS)")
 addHeader(rtffile, title=text)
 addTable(rtffile, basin.data.final, font.size=7)
 addNewLine(rtffile, n=1)
-text<-paste("Discharge Fraction")
+text<-paste("Indikator Transmisi Air")
 addHeader(rtffile, title=text)
 addPlot(rtffile, plot.fun=print,width=6.7, height=3, res=300, plot.discharge.overland  )
 addNewLine(rtffile,n=1)
-text<-paste("Gradual Water Release Indicators")
+text<-paste("Indikator Penyangga Hujan Diwaktu Puncak")
 addHeader(rtffile, title=text)
-addPlot(rtffile, plot.fun=print,width=6.7, height=3, res=300, plot.grad.water.res)
+addPlot(rtffile, plot.fun=print,width=6.7, height=3, res=300, plot.buff.peak.events)
 addNewLine(rtffile, n=1)
 addNewLine(rtffile, n=1)
-text<-paste("Water Transmission Function Indicators")
+text<-paste("Indikator Pelepasan Air Secara Berkala")
 addHeader(rtffile, title=text)
-addPlot(rtffile, plot.fun=print, width=6.7, height=3, res=300, plot.water.trans.func )
+addPlot(rtffile, plot.fun=print, width=6.7, height=3, res=300, plot.grad.rel.func )
 addNewLine(rtffile, n=1)
 addNewLine(rtffile, n=1)
-text<-paste("Buffering Capacity Function Indicators")
+text<-paste("Indikator Fungsi Penyangga Dari DAS")
 addHeader(rtffile, title=text)
 addPlot(rtffile, plot.fun=print, width=6.7, height=3, res=300, plot.buffer )
 addNewLine(rtffile, n=1)
 addNewLine(rtffile,n=1)
 text<-paste("--------------------------------------------------------------------------------------------------------------------------------------------")
 addParagraph(rtffile, text)
-text<-paste("Sub-Basin level watershed indicators")
+text<-paste("Indikator Hidrologi pada skala Sub-Daerah Aliran Sungai (Sub-DAS)")
 addHeader(rtffile, title=text)
 y<-period1
 while(y<=period2)
@@ -666,3 +681,44 @@ while(y<=period2)
   y<-y+1
 }
 done(rtffile)
+
+
+#Export Shapefiles
+if (exists('sub.basin.poly')){
+  
+  y<-period1
+  while(y<=period2)
+  {
+  sub.basin.polygon_export<-sub.basin.poly
+  plot.graph=paste("indicator.pre.",y, sep="")
+  subasin_indicators<-get(plot.graph)[,2:12]
+  colnames(subasin_indicators)[1]<-'Subbasin'
+  subasin_indicators$year<-y
+  
+  colnames(subasin_indicators)<-c('Subbasin','TDisFrPr','RBufIn','BufIn', 'BufPk','HiMonFr','OvFlFr','SoQFlFr','SlFlFrM1','LoMoFr', 'Tot.SYLD','Year')
+  sub.basin.polygon_export@data<-data.frame(merge(sub.basin.polygon_export,subasin_indicators, by='Subbasin'))
+  if(y==period1){
+    sub.basin.polygon.init<-sub.basin.polygon_export
+    print(paste("Exporting watershed indicators map", y))
+  } else if(y==period2){
+    sub.basin.polygon.final<-sub.basin.polygon_export
+    print(paste("Exporting watershed indicators map", y))
+  } else{
+    print(paste("Exporting watershed indicators map", y))
+  }
+  filename<-paste('sub_basin_indicators',location,'_',y,sep='')
+  writeOGR(sub.basin.polygon_export, dsn=getwd(), filename,driver="ESRI Shapefile", overwrite_layer=T)
+  y<-y+1
+  }
+} 
+
+
+#PLOT INITIAL PERIOD
+#ggplot(sub.basin.polygon.init, aes(long, lat, group='Year')) + geom_polygon(aes(fill = 'BufIn'))
+#PLOT FINAL PERIOD
+#ggplot(sub.basin.polygon.final, aes(x = long, y = lat, group = 'Year', colour = 'BufIn'))+ geom_polygon(aes(fill = 'BufIn'))
+
+
+
+#ggplot(sub.basin.polygon.init) + aes(long,lat,group='Year',fill='BufIn') + geom_polygon() + geom_path(color="black")
+
